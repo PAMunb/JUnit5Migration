@@ -10,6 +10,7 @@ import util::IOUtil;
 import lang::java::\syntax::Java18;
 import lang::java::transformations::junit::ExpectedException;
 import lang::java::transformations::junit::ExpectedTimeout;
+import lang::java::transformations::junit::SimpleAnnotations;
  
 
 public void main(str path = "", str maxFilesOpt = "", str transformations = "all") {
@@ -49,7 +50,10 @@ public void main(str path = "", str maxFilesOpt = "", str transformations = "all
 		  	to = to + 1; 
 		  } 
 		  
-		  
+		  if(verifySimpleAnnotations(unit)) {
+		    unit = executeSimpleAnnotationsTransformation(unit);
+		  	sa = sa + 1; 
+		  }
 		  
 		  writeFile(f, unit);  
 		  
@@ -65,6 +69,8 @@ public void main(str path = "", str maxFilesOpt = "", str transformations = "all
 
 	println("ExpectedException rule: <ee> transformation(s)"); 
 	println("ExpectedTimeout rule: <to> transformation(s)"); 
+	println("SimpleAnnotations rule: <sa> transformation(s)"); 
+	
 	
 	println("Files with error: <errors>");	
 	println("Number of files: <size(allFiles)>");  
