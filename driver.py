@@ -6,7 +6,7 @@ import git
 
 logging.basicConfig(level = logging.INFO)
 
-usage = 'migrate.py -i <input_dir>'
+usage = 'migrate.py -i <input_dir> '
 branch = 'junit5-migration'
 
 
@@ -14,14 +14,17 @@ def main(argv):
     cwd = os.getcwd()
 
     input_dir = ''
+    max_files = '0'
 
-    opts, args = getopt.getopt(argv, "hi:", ["input_dir="])
+    opts, args = getopt.getopt(argv, "hi:m:", ["input_dir=", "max_files="])
 
     for opt, arg in opts:
         if opt == '-h':
             print(usage)
         elif opt in ('-i', '--input_dir'):
             input_dir = arg
+        elif opt in ('-m', '--max_files'):
+            max_files = arg
         else:
             print(usage)
     
@@ -36,7 +39,7 @@ def main(argv):
 
     logging.info("Executing the migrations")
 
-    os.system(f"java -jar rascal-shell-stable.jar lang::java::transformations::junit::MainProgram -path {input_dir}")
+    os.system(f"java -jar rascal-shell-stable.jar lang::java::transformations::junit::MainProgram -path {input_dir} -maxFilesOpt {max_files}")
 
     os.chdir(input_dir)
 

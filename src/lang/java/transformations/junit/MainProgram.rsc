@@ -3,6 +3,7 @@ module lang::java::transformations::junit::MainProgram
 import IO; 
 import List; 
 import ParseTree; 
+import String; 
 
 import util::IOUtil;
 
@@ -11,7 +12,7 @@ import lang::java::transformations::junit::ExpectedException;
 import lang::java::transformations::junit::ExpectedTimeout;
  
 
-public void main(str path = "", str transformations = "all") {
+public void main(str path = "", str maxFilesOpt = "", str transformations = "all") {
     loc base = |file:///| + path; 
     
     if( (path == "") || (! exists(base)) || (! isDirectory(base)) ) {
@@ -19,12 +20,19 @@ public void main(str path = "", str transformations = "all") {
        return; 
     }
     
+    int maxFiles = 0;
+    
+    if(maxFilesOpt != "") {
+		maxFiles = toInt(maxFilesOpt);     
+    } 
+    
 	list[loc] allFiles = findAllFiles(base, "java"); 
 	
 	int errors = 0; 
 	
 	int ee = 0; 
 	int to = 0; 
+	int sa = 0;
 	
 	for(loc f <- allFiles) {
 	  try {  
@@ -41,7 +49,13 @@ public void main(str path = "", str transformations = "all") {
 		  	to = to + 1; 
 		  } 
 		  
+		  
+		  
 		  writeFile(f, unit);  
+		  
+		  if( (maxFiles) > 0 && (to + ee >= maxFiles) ) {
+		     break; 
+		  } 
 		  
 	  }
 	  catch: {
