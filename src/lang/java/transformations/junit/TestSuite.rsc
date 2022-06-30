@@ -5,7 +5,8 @@ import ParseTree;
 import lang::java::\syntax::Java18; 
 import lang::java::transformations::junit::ExpectedException; 
 import lang::java::transformations::junit::ExpectedTimeout; 
-import lang::java::transformations::junit::SimpleAnnotations; 
+import lang::java::transformations::junit::SimpleAnnotations;
+import lang::java::transformations::junit::ConditionalAssertion;
 
 str code1() = 
  "import org.junit.Test; 
@@ -96,6 +97,23 @@ str code4() =
 '    dinic = new DinicMFImpl\<\>(g);
 '    double flow = dinic.getMaximumFlowValue(v1, v1);
 '    System.out.println(flow);
+'  } 
+'}"; 
+
+str code5() = 
+"public class TestSuite { 
+'  @Test
+'  public void myInvestigationTestWSingleStatement() {
+'    if(true) {
+'		  Assert.assertEquals(\"expected\", \"expected\");
+'	   }
+'  } 
+
+'  public void myInvestigationTestWMutilpleStatements() {
+'    if(true) {
+'		  Assert.assertEquals(\"expected\", \"expected\");
+'		  Assert.assertEquals(\"something\", \"something\");
+'	   }
 '  } 
 '}"; 
   
@@ -255,4 +273,10 @@ test bool testExpectException2() {
   expected = parse(#CompilationUnit, expectedCode4());
   res = executeExpectedExceptionTransformation(original);
   return res == expected; 	     
+}
+
+test bool testConditionalAssertion() {
+  original = parse(#CompilationUnit, code5());
+  executeConditionalAssertionTransformation(original);
+  return true;
 }
