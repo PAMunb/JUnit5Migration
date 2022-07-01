@@ -7,6 +7,7 @@ import lang::java::transformations::junit::ExpectedException;
 import lang::java::transformations::junit::ExpectedTimeout; 
 import lang::java::transformations::junit::SimpleAnnotations;
 import lang::java::transformations::junit::ConditionalAssertion;
+import IO;
 
 str code1() = 
  "import org.junit.Test; 
@@ -231,6 +232,20 @@ str expectedCode1() =
   '  
   '}";
  
+str expectedCode5() = 
+"public class TestSuite { 
+'  @Test
+'  public void myInvestigationTestWSingleStatement() {
+'	   Assert.assertEquals(\"expected\", \"expected\");
+'  } 
+
+'  public void myInvestigationTestWMutilpleStatements() {
+'    if(true) {
+'		  Assert.assertEquals(\"expected\", \"expected\");
+'		  Assert.assertEquals(\"something\", \"something\");
+'	   }
+'  } 
+'}"; 
  
 test bool testExpectException() {
   original = parse(#CompilationUnit, code1()); 
@@ -277,6 +292,8 @@ test bool testExpectException2() {
 
 test bool testConditionalAssertion() {
   original = parse(#CompilationUnit, code5());
-  executeConditionalAssertionTransformation(original);
-  return true;
+  expected = parse(#CompilationUnit, expectedCode4());
+  res = executeConditionalAssertionTransformation(original);
+  println(res);
+  return res == expected;
 }
