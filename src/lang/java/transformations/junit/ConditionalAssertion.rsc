@@ -36,21 +36,20 @@ public CompilationUnit declareNewMethod(Expression expression, Identifier method
   MethodDeclaration conditionalMethod = (MethodDeclaration) `public boolean <Identifier methodName>() {
                                                             '  return <Expression expression>;
                                                             '}`;
-   unit = top-down visit(unit) {
-      case (ClassBodyDeclaration) `<ClassBodyDeclaration declarations>` => (ClassBodyDeclaration) `<ClassBodyDeclaration declarations>
-                                                                                                     '<MethodDeclaration conditionalMethod>`
-    }
-    return unit;
+  top-down visit(unit) {
+      case (ClassBody) `{ <ClassBodyDeclaration* declarations> }` =>  (ClassBody) `{ 
+                                                                      '   <ClassBodyDeclaration* declarations> 
+                                                                      '   <MethodDeclaration conditionalMethod>
+                                                                      '}`                                                                                                 
+  }
+  return unit;
 }
 
 public bool isStatementConditionalAssertion(BlockStatements s) {
   top-down visit(s) {
     case (Statement) `if(<Expression _>) {
-                     '  <AssertStatement _>
-                     '}` : return true;
-    case (Statement) `if(<Expression _>) {
-                     '  <AssertStatement _>
-                     '}` : return true;
+                     '   Assert.assertEquals(<Expression _>, <Expression _>);
+                     '}` : return true; 
   }
 
   return false;
