@@ -104,13 +104,13 @@ str code4() =
 str code5() = 
 "public class TestSuite { 
 '  @Test
-'  public void myInvestigationTestWSingleStatement() {
+'  public void conditionalAssertionWSingleStatement() {
 '    if(true) {
 '		  Assert.assertEquals(\"expected\", \"expected\");
 '	   }
 '  } 
 
-'  public void myInvestigationTestWMutilpleStatements() {
+'  public void conditionalAssertionWMutilpleStatements() {
 '    if(true) {
 '		  Assert.assertEquals(\"expected\", \"expected\");
 '		  Assert.assertEquals(\"something\", \"something\");
@@ -235,16 +235,22 @@ str expectedCode1() =
 str expectedCode5() = 
 "public class TestSuite { 
 '  @Test
-'  public void myInvestigationTestWSingleStatement() {
+'  @EnableIf(\"conditionalAssertionWSingleStatementCondition\")
+'  public void conditionalAssertionWSingleStatement() {
 '	   Assert.assertEquals(\"expected\", \"expected\");
 '  } 
 
-'  public void myInvestigationTestWMutilpleStatements() {
+'  public void conditionalAssertionWMutilpleStatements() {
 '    if(true) {
 '		  Assert.assertEquals(\"expected\", \"expected\");
 '		  Assert.assertEquals(\"something\", \"something\");
 '	   }
 '  } 
+'  
+'  public boolean conditionalAssertionWSingleStatementCondition() {
+'    return true;
+'  }
+'
 '}"; 
  
 test bool testExpectException() {
@@ -292,8 +298,7 @@ test bool testExpectException2() {
 
 test bool testConditionalAssertion() {
   original = parse(#CompilationUnit, code5());
-  expected = parse(#CompilationUnit, expectedCode4());
+  expected = parse(#CompilationUnit, expectedCode5());
   res = executeConditionalAssertionTransformation(original);
-  println(res);
   return res == expected;
 }
