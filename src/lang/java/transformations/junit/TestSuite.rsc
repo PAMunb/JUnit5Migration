@@ -3,10 +3,11 @@ module lang::java::transformations::junit::TestSuite
 import ParseTree; 
 
 import lang::java::\syntax::Java18; 
+import lang::java::transformations::junit::AssertAll; 
+import lang::java::transformations::junit::ConditionalAssertion;
 import lang::java::transformations::junit::ExpectedException; 
 import lang::java::transformations::junit::ExpectedTimeout; 
 import lang::java::transformations::junit::SimpleAnnotations;
-import lang::java::transformations::junit::ConditionalAssertion;
 import IO;
 
 str code1() = 
@@ -115,6 +116,18 @@ str code5() =
 '		  Assert.assertEquals(\"expected\", \"expected\");
 '		  Assert.assertEquals(\"something\", \"something\");
 '	   }
+'  } 
+'}"; 
+
+
+str code6() = 
+"public class TestSuite { 
+'  @Test
+'  public void multipleAssertionsTest() {
+'	  	Assert.assertEquals(\"expected\", \"expected\");
+'	  	Assert.assertEquals(\"expected\", \"expected\");
+'	  	Assert.assertEquals(\"expected\", \"expected\");
+'	  	Assert.assertEquals(\"expected\", \"expected\");
 '  } 
 '}"; 
   
@@ -252,6 +265,19 @@ str expectedCode5() =
 '  }
 '
 '}"; 
+
+str expectedCode6() = 
+"public class TestSuite { 
+'  @Test
+'  public void multipleAssertionsTest() {
+'     assertAll(
+'	  	  () -\> Assert.assertEquals(\"expected\", \"expected\"),
+'	  	  () -\> Assert.assertEquals(\"expected\", \"expected\"),
+'	  	  () -\> Assert.assertEquals(\"expected\", \"expected\"),
+'	  	  () -\> Assert.assertEquals(\"expected\", \"expected\")
+'     );
+'  } 
+'}"; 
  
 test bool testExpectException() {
   original = parse(#CompilationUnit, code1()); 
@@ -300,5 +326,12 @@ test bool testConditionalAssertion() {
   original = parse(#CompilationUnit, code5());
   expected = parse(#CompilationUnit, expectedCode5());
   res = executeConditionalAssertionTransformation(original);
+  return res == expected;
+}
+
+test bool testAssertAll() {
+  original = parse(#CompilationUnit, code6());
+  expected = parse(#CompilationUnit, expectedCode6());
+  res = executeAssertAllTransformation(original);
   return res == expected;
 }
