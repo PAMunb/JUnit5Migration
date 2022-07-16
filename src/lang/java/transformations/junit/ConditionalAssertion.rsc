@@ -39,7 +39,7 @@ private CompilationUnit declareNewMethod(Expression expression, Identifier metho
       case (ClassBody) `{ <ClassBodyDeclaration* declarations> }` =>  (ClassBody) `{ 
                                                                       '   <ClassBodyDeclaration* declarations> 
                                                                       '   <MethodDeclaration conditionalMethod>
-                                                                      '}`                                                                                                 
+                                                                      '}`
   }
   return unit;
 }
