@@ -4,8 +4,6 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 
 public CompilationUnit executeAssertAllTransformation(CompilationUnit unit) {
-  list[tuple[Identifier, Expression]] conditionalMethods = [];
-
   unit = top-down visit(unit) {
     case (MethodDeclaration) `@Test
                              'public void <Identifier testName>() {
@@ -20,28 +18,36 @@ public CompilationUnit executeAssertAllTransformation(CompilationUnit unit) {
 public MethodDeclaration declareTestWithAssertAll(Identifier testName, BlockStatements testStatements) {
   list[Expression] assertionsAsLambdas = [];
 
-  BlockStatements assertions = top-down visit(testStatements) {
+  top-down visit(testStatements) {
     case (Statement) `Assert.assertEquals(<Expression a> , <Expression b>);` : {
-      Expression expressionAsLambda = (Expression) `() -\> Assert.assertEquals(<Expression a> , <Expression b>)`;
+      Expression expressionAsLambda = (Expression) 
+                                      `() -\> Assert.assertEquals(<Expression a> , <Expression b>)`;
       assertionsAsLambdas = assertionsAsLambdas + expressionAsLambda; 
     }
   };
 
-  Expression firstAssertion = head(assertionsAsLambdas);
-  str assertAllArguments = unparse(firstAssertion);
-
-  for (Expression argument <- tail(assertionsAsLambdas)) {
-    assertAllArguments = assertAllArguments + ", <unparse(argument)>";
-  }
-  ArgumentList argList = parse(#ArgumentList, assertAllArguments);
+  ArgumentList argList = buildAssertAllInvocationArguments(assertionsAsLambdas);
   Statement assertAllInvocation = (Statement) `assertAll(<ArgumentList argList>);`;
 
-  MethodDeclaration newTest = (MethodDeclaration) `@Test
-                                                  'public void <Identifier testName>() {
-                                                  '  <Statement assertAllInvocation>
-                                                  '}`;
+  return buildRefactoredTest(testName, assertAllInvocation);
+}
 
-  return newTest;
+private MethodDeclaration buildRefactoredTest(Identifier testName, Statement assertAllStatement) {
+  return (MethodDeclaration) `@Test
+                             'public void <Identifier testName>() {
+                             '  <Statement assertAllStatement>
+                             '}`;
+}
+
+private ArgumentList buildAssertAllInvocationArguments(list[Expression] assertionsAsLambdas) {
+  Expression firstAssertionLambda = head(assertionsAsLambdas);
+  str assertAllInvocationArguments = unparse(firstAssertionLambda);
+
+  for (Expression argument <- tail(assertionsAsLambdas)) {
+    assertAllInvocationArguments = assertAllInvocationArguments + ", <unparse(argument)>";
+  }
+
+  return parse(#ArgumentList, assertAllInvocationArguments);;
 }
 
 public bool allStatementsAreAssertions(BlockStatements testStatements) {
