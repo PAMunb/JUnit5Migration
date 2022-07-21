@@ -125,9 +125,9 @@ str code6() =
 '  @Test
 '  public void multipleAssertionsTest() {
 '	  	Assert.assertEquals(\"expected\", \"expected\");
-'	  	Assert.assertEquals(\"expected\", \"expected\");
-'	  	Assert.assertEquals(\"expected\", \"expected\");
-'	  	Assert.assertEquals(\"expected\", \"expected\");
+'	  	Assert.assertEquals(\"something\", \"something\");
+'	  	Assert.assertEquals(\"another thing\", \"another thing\");
+'	  	Assert.assertEquals(\"thing number 3\", \"thing number 3\");
 '  } 
 '}"; 
   
@@ -272,9 +272,9 @@ str expectedCode6() =
 '  public void multipleAssertionsTest() {
 '     assertAll(
 '	  	  () -\> Assert.assertEquals(\"expected\", \"expected\"),
-'	  	  () -\> Assert.assertEquals(\"expected\", \"expected\"),
-'	  	  () -\> Assert.assertEquals(\"expected\", \"expected\"),
-'	  	  () -\> Assert.assertEquals(\"expected\", \"expected\")
+'	  	  () -\> Assert.assertEquals(\"something\", \"something\"),
+'	  	  () -\> Assert.assertEquals(\"another thing\", \"another thing\"),
+'	  	  () -\> Assert.assertEquals(\"thing number 3\", \"thing number 3\")
 '     );
 '  } 
 '}"; 
