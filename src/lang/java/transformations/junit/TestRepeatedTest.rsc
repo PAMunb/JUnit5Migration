@@ -11,7 +11,7 @@ str code1() =
 "public class TestSuite { 
 '  @Test
 '  public void multipleAssertionsTest() {
-'     for (int i = 0; i \< 5; i++) {
+'     for (int i = 2; i \< 5; i++) {
 '	  	  Assert.assertEquals(\"expected\", \"expected\");
 '     }
 '  } 
@@ -20,7 +20,7 @@ str code1() =
 str expectedCode1() = 
 "public class TestSuite { 
 '  @Test
-'  @RepeatedTest(5)
+'  @RepeatedTest(3)
 '  public void multipleAssertionsTest() {
 '	   Assert.assertEquals(\"expected\", \"expected\");
 '  } 
