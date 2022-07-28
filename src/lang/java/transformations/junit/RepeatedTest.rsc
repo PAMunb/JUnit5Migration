@@ -60,12 +60,11 @@ private Maybe[int] resolveIterationCount(ForStatementData f) {
   if(forCondition.id notin f.forInitValues) {
     return nothing();
   }
-
-  str updateExpression = unparse(f.forUpdateExpression);
+str updateExpression = unparse(f.forUpdateExpression);
   str id = unparse(head(f.forUpdateIdentifiers));
 
-
   int count = toInt(unparse(forCondition.vl)) - f.forInitValues[forCondition.id];
+  if(count < 0) count *= -1;
 
 
   switch(forCondition.op) {
@@ -75,7 +74,7 @@ private Maybe[int] resolveIterationCount(ForStatementData f) {
     }
     case "\<=": {
       list[str] recognizedUpdates = ["<id>++", "<id> += 1", "<id>+=1"];
-      if(updateExpression in recognizedUpdates) return just(count - 1);
+      if(updateExpression in recognizedUpdates) return just(count + 1);
     }
     case "\>": {
       list[str] recognizedUpdates = ["<id>--", "<id> -= 1", "<id>-=1"];
