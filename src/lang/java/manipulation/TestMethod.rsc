@@ -6,6 +6,8 @@ import lang::java::\syntax::Java18;
 public bool isMethodATest(MethodDeclaration method) {
   top-down visit(method) {
     case (Annotation) `@Test`: return true; 
+    case (Annotation) `@ParameterizedTest`: return true; 
+    case (Annotation) `@RepeatedTest(<ElementValue _>)`: return true; 
   }
 
   return false;
