@@ -1,14 +1,28 @@
 module lang::java::transformations::junit::TestSuite
 
 import ParseTree;
-
 import lang::java::\syntax::Java18;
 import lang::java::transformations::junit::AssertAll;
 import lang::java::transformations::junit::ConditionalAssertion;
 import lang::java::transformations::junit::ExpectedException;
 import lang::java::transformations::junit::ExpectedTimeout;
 import lang::java::transformations::junit::SimpleAnnotations;
-import IO;
+import util::Testing;
+
+test bool main() {
+  list[bool ()] tests = [
+    testExpectException,
+    testExpectExceptionNoMatch,
+    testExpectedTimeout,
+    testExpectedTimeoutNoMatch,
+    testSimpleAnnotations,
+    testExpectException2,
+    testConditionalAssertion,
+    testAssertAll
+  ];
+
+  return runAndReportMultipleTests(tests);
+}
 
 str code1() =
  "import org.junit.Test;

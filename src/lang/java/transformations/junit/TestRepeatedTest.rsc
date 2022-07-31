@@ -1,20 +1,12 @@
 module lang::java::transformations::junit::TestRepeatedTest
 
-import IO;
 import Map;
 import ParseTree;
 import Set;
 import lang::java::\syntax::Java18;
 import lang::java::transformations::junit::RepeatedTest;
-import util::Maybe;
-
-private bool runAndReportTest(bool () testFunction) {
-	bool testResult = testFunction();
-	print(testFunction);
-	print(": ");
-	println(testResult);
-	return testResult;
-}
+import util::MaybeManipulation;
+import util::Testing;
 
 test bool main() {
   list[bool ()] tests = [
@@ -25,7 +17,7 @@ test bool main() {
   	descendingInclusiveForStatementRepeatedTest
   ];
 
-  return (true | it && runAndReportTest(t) | bool () t <- tests);
+  return runAndReportMultipleTests(tests);
 }
 
 test bool extractForStatementDataTest() {
@@ -44,10 +36,7 @@ test bool extractForStatementDataTest() {
   );
 
 
-  ForStatementData res;
-  switch(extractForStatementData(forStatement)) {
-    case just(extractedData): { res = extractedData; }
-  }
+  ForStatementData res = unwrap(extractForStatementData(forStatement));
 
   return expect == res;
 }

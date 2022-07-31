@@ -1,18 +1,9 @@
 module lang::java::transformations::junit::TestTempDir
 
-import IO;
 import ParseTree;
 import lang::java::\syntax::Java18;
 import lang::java::transformations::junit::TempDir;
-import util::Maybe;
-
-private bool runAndReportTest(bool () testFunction) {
-	bool testResult = testFunction();
-	print(testFunction);
-	print(": ");
-	println(testResult);
-	return testResult;
-}
+import util::Testing;
 
 test bool main() {
   list[bool ()] tests = [
@@ -20,7 +11,7 @@ test bool main() {
     addTempDirAnnotationWithOtherParameters
   ];
 
-  return (true | it && runAndReportTest(t) | bool () t <- tests);
+  return runAndReportMultipleTests(tests);
 }
 
 
