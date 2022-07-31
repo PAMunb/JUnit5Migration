@@ -1,13 +1,13 @@
 module lang::java::manipulation::TestMethod
 
 import ParseTree;
-import lang::java::\syntax::Java18; 
+import lang::java::\syntax::Java18;
 
 public bool isMethodATest(MethodDeclaration method) {
   top-down visit(method) {
-    case (Annotation) `@Test`: return true; 
-    case (Annotation) `@ParameterizedTest`: return true; 
-    case (Annotation) `@RepeatedTest(<ElementValue _>)`: return true; 
+    case (Annotation) `@Test`: return true;
+    case (Annotation) `@ParameterizedTest`: return true;
+    case (Annotation) `@RepeatedTest(<ElementValue _>)`: return true;
   }
 
   return false;
@@ -62,8 +62,8 @@ public MethodDeclaration addMethodAnnotation(MethodDeclaration method, Annotatio
   modifiers = (modifiers - terminatingModifiers()) + annotationMod + (modifiers & terminatingModifiers());
 
   method = top-down-break visit(method) {
-    case (MethodDeclaration) `<MethodModifier* _> 
-                             '<MethodHeader header> 
+    case (MethodDeclaration) `<MethodModifier* _>
+                             '<MethodHeader header>
                              '<MethodBody body>` : {
                                MethodDeclaration newMethod = (MethodDeclaration) `<MethodHeader header>
                                                                                  '<MethodBody body>`;
@@ -78,9 +78,9 @@ public MethodDeclaration addMethodAnnotation(MethodDeclaration method, Annotatio
 public MethodDeclaration addMethodModifier(MethodDeclaration method, MethodModifier modf) {
   return top-down-break visit(method) {
     case (MethodDeclaration) `<MethodModifier* modifiers>
-                             '<MethodHeader header> 
+                             '<MethodHeader header>
                              '<MethodBody body>` => (MethodDeclaration) `<MethodModifier* modifiers>
-                                                                        '<MethodModifier modf> <MethodHeader header> 
+                                                                        '<MethodModifier modf> <MethodHeader header>
                                                                         '<MethodBody body>`
 
   }

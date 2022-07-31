@@ -1,6 +1,6 @@
 module lang::java::transformations::junit::RepeatedTest
 
-import Map; 
+import Map;
 import ParseTree;
 import Set;
 import String;
@@ -11,8 +11,8 @@ import util::MaybeManipulation;
 
 data ForStatementData = forStatementData(
     map[Identifier, int] forInitValues,
-    StatementExpressionList forUpdateExpression, 
-    list[Identifier] forUpdateIdentifiers, 
+    StatementExpressionList forUpdateExpression,
+    list[Identifier] forUpdateIdentifiers,
     list[tuple[Identifier id, str op, IntegerLiteral vl]] forConditionParts,
     Statement statement
 );
@@ -46,8 +46,8 @@ public MethodDeclaration declareTestWithRepeatedTest(Identifier testName, ForSta
 }
 
 private MethodDeclaration buildRefactoredTest(
-                                              Identifier testName, 
-                                              Block b, 
+                                              Identifier testName,
+                                              Block b,
                                               IntegerLiteral iterationCount
                                              ) {
   return (MethodDeclaration) `@Test
@@ -117,13 +117,13 @@ private list[Identifier] extractIdentifiers(StatementExpressionList expressions)
 private bool statementRepeatsAssertionsOnly(ForStatementData f) {
   int assertionCount = 0;
   top-down visit(f.statement) {
-    case (Statement) 
+    case (Statement)
       `{
       ' <Statement _>
       '}` : {};
     case (Statement) `Assert.assertEquals(<Expression _> , <Expression _>);`: assertionCount += 1;
     case Statement s: {
-      return false; 
+      return false;
     }
   }
 
@@ -140,7 +140,7 @@ public Maybe[ForStatementData] extractForStatementData(ForStatement forStatement
   Maybe[ForStatementData] forStmtData = nothing();
 
   top-down visit(forStatement) {
-    case (ForStatement) 
+    case (ForStatement)
             `for(<ForInit fi>; <Expression ex>; <ForUpdate fu>) <Statement stmt>` : {
               forStmtData = just(forStatementData(
                   extractForInitValues(fi),
@@ -150,7 +150,7 @@ public Maybe[ForStatementData] extractForStatementData(ForStatement forStatement
                   stmt
                   ));
             }
-    // case (ForStatement) 
+    // case (ForStatement)
             // `for(<ForInit _>; Expression _; ForUpdate fu) <StatementNoShortIf stmt>`: {
             // }
   }
@@ -175,7 +175,7 @@ private map[Identifier, int] extractForInitValues(ForInit fi) {
         case IntegerLiteral intl: v = intl;
       };
 
-      if(identifier != nothing() && v != nothing() && 
+      if(identifier != nothing() && v != nothing() &&
           unparse(unwrap(identifier)) == unparse(id) && unparse(unwrap(v)) == unparse(val)) {
         values += (unwrap(identifier) : unwrap(v));
       }
@@ -228,28 +228,28 @@ private list[tuple[Identifier, str, IntegerLiteral]] extractForConditionParts(Ex
       if(relExpContainsIdentifierOnly(l) && sftExpContainsIntegerOnly(r)) {
         forConditionParts = forConditionParts + [<
           unwrap(extractIdentifierFromExpression(l)), "\<", unwrap(extractIntegerFromExpression(r))
-         >]; 
+         >];
       }
     }
     case (RelationalExpression) `<RelationalExpression l> \<= <ShiftExpression r>`: {
       if(relExpContainsIdentifierOnly(l) && sftExpContainsIntegerOnly(r)) {
         forConditionParts = forConditionParts + [<
           unwrap(extractIdentifierFromExpression(l)), "\<=", unwrap(extractIntegerFromExpression(r))
-         >]; 
+         >];
       }
     }
     case (RelationalExpression) `<RelationalExpression l> \> <ShiftExpression r>`: {
       if(relExpContainsIdentifierOnly(l) && sftExpContainsIntegerOnly(r)) {
         forConditionParts = forConditionParts + [<
           unwrap(extractIdentifierFromExpression(l)), "\>", unwrap(extractIntegerFromExpression(r))
-         >]; 
+         >];
       }
     }
     case (RelationalExpression) `<RelationalExpression l> \>= <ShiftExpression r>`: {
       if(relExpContainsIdentifierOnly(l) && sftExpContainsIntegerOnly(r)) {
         forConditionParts = forConditionParts + [<
           unwrap(extractIdentifierFromExpression(l)), "\>=", unwrap(extractIntegerFromExpression(r))
-         >]; 
+         >];
       }
     }
   }
@@ -259,7 +259,7 @@ private list[tuple[Identifier, str, IntegerLiteral]] extractForConditionParts(Ex
 
 private bool relExpContainsIdentifierOnly(RelationalExpression e) {
   switch(extractIdentifierFromExpression(e)) {
-    case just(identifier): return unparse(identifier) == unparse(e); 
+    case just(identifier): return unparse(identifier) == unparse(e);
   }
 
   return false;

@@ -1,7 +1,7 @@
 module lang::java::transformations::junit::ConditionalAssertion
 
 import ParseTree;
-import lang::java::\syntax::Java18; 
+import lang::java::\syntax::Java18;
 import lang::java::manipulation::TestMethod;
 import util::Maybe;
 
@@ -21,9 +21,9 @@ public CompilationUnit executeConditionalAssertionTransformation(CompilationUnit
       }
     }
   }
-  
-  return (unit | 
-            declareNewMethod(t.condition, t.name, unit) | 
+
+  return (unit |
+            declareNewMethod(t.condition, t.name, unit) |
             tuple[Identifier name, Expression condition] t <- conditionalMethods);
 }
 
@@ -43,7 +43,7 @@ private Maybe[tuple[MethodDeclaration declaration, Identifier enablerName, Expre
                                                '  Assert.assertEquals(<Expression ex1>, <Expression ex2>);
                                                '}`;
       MethodDeclaration transformedMethod = replaceMethodBody(
-                                              addMethodAnnotation(method, enablerAnnotation), 
+                                              addMethodAnnotation(method, enablerAnnotation),
                                               refactoredBody
                                             );
       return just(<transformedMethod, parse(#Identifier, conditionalMethodName), condition>);
@@ -59,8 +59,8 @@ private CompilationUnit declareNewMethod(Expression expression, Identifier metho
                                                             '  return <Expression expression>;
                                                             '}`;
   unit = top-down visit(unit) {
-      case (ClassBody) `{ <ClassBodyDeclaration* declarations> }` =>  (ClassBody) `{ 
-                                                                      '   <ClassBodyDeclaration* declarations> 
+      case (ClassBody) `{ <ClassBodyDeclaration* declarations> }` =>  (ClassBody) `{
+                                                                      '   <ClassBodyDeclaration* declarations>
                                                                       '   <MethodDeclaration conditionalMethod>
                                                                       '}`
   }
@@ -71,7 +71,7 @@ public bool isStatementConditionalAssertion(BlockStatements s) {
   top-down visit(s) {
     case (Statement) `if(<Expression _>) {
                      '   Assert.assertEquals(<Expression _>, <Expression _>);
-                     '}` : return true; 
+                     '}` : return true;
   }
 
   return false;

@@ -1,6 +1,6 @@
 module lang::java::transformations::junit::AssertAll
 
-import lang::java::\syntax::Java18; 
+import lang::java::\syntax::Java18;
 import ParseTree;
 
 public CompilationUnit executeAssertAllTransformation(CompilationUnit unit) {
@@ -20,9 +20,9 @@ public MethodDeclaration declareTestWithAssertAll(Identifier testName, BlockStat
 
   top-down visit(testStatements) {
     case (Statement) `Assert.assertEquals(<Expression a> , <Expression b>);` : {
-      Expression expressionAsLambda = (Expression) 
+      Expression expressionAsLambda = (Expression)
                                       `() -\> Assert.assertEquals(<Expression a> , <Expression b>)`;
-      assertionsAsLambdas = assertionsAsLambdas + expressionAsLambda; 
+      assertionsAsLambdas = assertionsAsLambdas + expressionAsLambda;
     }
   };
 

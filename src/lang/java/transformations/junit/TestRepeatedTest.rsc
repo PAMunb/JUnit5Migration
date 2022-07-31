@@ -2,10 +2,10 @@ module lang::java::transformations::junit::TestRepeatedTest
 
 import IO;
 import Map;
-import ParseTree; 
+import ParseTree;
 import Set;
-import lang::java::\syntax::Java18; 
-import lang::java::transformations::junit::RepeatedTest; 
+import lang::java::\syntax::Java18;
+import lang::java::transformations::junit::RepeatedTest;
 import util::Maybe;
 
 private bool runAndReportTest(bool () testFunction) {
@@ -24,12 +24,12 @@ test bool main() {
   	descendingExclusiveForStatementRepeatedTest,
   	descendingInclusiveForStatementRepeatedTest
   ];
-  
+
   return (true | it && runAndReportTest(t) | bool () t <- tests);
 }
 
 test bool extractForStatementDataTest() {
-  ForStatement forStatement = (ForStatement) 
+  ForStatement forStatement = (ForStatement)
                                 `for (int i = 0; i \< 5; i++) {
                                 '  Assert.assertEquals("expected", "expected");
                                 '}`;
@@ -43,33 +43,33 @@ test bool extractForStatementDataTest() {
     parse(#Statement, "{\n  Assert.assertEquals(\"expected\", \"expected\");\n}")
   );
 
-  
+
   ForStatementData res;
   switch(extractForStatementData(forStatement)) {
-    case just(extractedData): { res = extractedData; } 
+    case just(extractedData): { res = extractedData; }
   }
 
   return expect == res;
 }
 
-str code1() = 
-"public class TestSuite { 
+str code1() =
+"public class TestSuite {
 '  @Test
 '  public void multipleAssertionsTest() {
 '     for (int i = 2; i \< 5; i++) {
 '	  	  Assert.assertEquals(\"expected\", \"expected\");
 '     }
-'  } 
-'}"; 
+'  }
+'}";
 
-str expectedCode1() = 
-"public class TestSuite { 
+str expectedCode1() =
+"public class TestSuite {
 '  @Test
 '  @RepeatedTest(3)
 '  public void multipleAssertionsTest() {
 '	   Assert.assertEquals(\"expected\", \"expected\");
-'  } 
-'}"; 
+'  }
+'}";
 
 test bool ascendingExclusiveForStatementRepeatedTest() {
   original = parse(#CompilationUnit, code1());
@@ -79,24 +79,24 @@ test bool ascendingExclusiveForStatementRepeatedTest() {
   return expected == res;
 }
 
-str code2() = 
-"public class TestSuite { 
+str code2() =
+"public class TestSuite {
 '  @Test
 '  public void multipleAssertionsTest() {
 '     for (int i = 2; i \<= 5; i++) {
 '	  	  Assert.assertEquals(\"expected\", \"expected\");
 '     }
-'  } 
-'}"; 
+'  }
+'}";
 
-str expectedCode2() = 
-"public class TestSuite { 
+str expectedCode2() =
+"public class TestSuite {
 '  @Test
 '  @RepeatedTest(4)
 '  public void multipleAssertionsTest() {
 '	   Assert.assertEquals(\"expected\", \"expected\");
-'  } 
-'}"; 
+'  }
+'}";
 
 test bool ascendingInclusiveForStatementRepeatedTest() {
   original = parse(#CompilationUnit, code2());
@@ -106,24 +106,24 @@ test bool ascendingInclusiveForStatementRepeatedTest() {
   return expected == res;
 }
 
-str code3() = 
-"public class TestSuite { 
+str code3() =
+"public class TestSuite {
 '  @Test
 '  public void multipleAssertionsTest() {
 '     for (int i = 7; i \> 1; i--) {
 '	  	  Assert.assertEquals(\"expected\", \"expected\");
 '     }
-'  } 
-'}"; 
+'  }
+'}";
 
-str expectedCode3() = 
-"public class TestSuite { 
+str expectedCode3() =
+"public class TestSuite {
 '  @Test
 '  @RepeatedTest(6)
 '  public void multipleAssertionsTest() {
 '	   Assert.assertEquals(\"expected\", \"expected\");
-'  } 
-'}"; 
+'  }
+'}";
 
 test bool descendingExclusiveForStatementRepeatedTest() {
   original = parse(#CompilationUnit, code3());
@@ -133,24 +133,24 @@ test bool descendingExclusiveForStatementRepeatedTest() {
   return expected == res;
 }
 
-str code4() = 
-"public class TestSuite { 
+str code4() =
+"public class TestSuite {
 '  @Test
 '  public void multipleAssertionsTest() {
 '     for (int i = 7; i \>= 1; i--) {
 '	  	  Assert.assertEquals(\"expected\", \"expected\");
 '     }
-'  } 
-'}"; 
+'  }
+'}";
 
-str expectedCode4() = 
-"public class TestSuite { 
+str expectedCode4() =
+"public class TestSuite {
 '  @Test
 '  @RepeatedTest(7)
 '  public void multipleAssertionsTest() {
 '	   Assert.assertEquals(\"expected\", \"expected\");
-'  } 
-'}"; 
+'  }
+'}";
 
 test bool descendingInclusiveForStatementRepeatedTest() {
   original = parse(#CompilationUnit, code4());
