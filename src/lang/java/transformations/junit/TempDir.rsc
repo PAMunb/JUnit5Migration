@@ -1,24 +1,23 @@
 module lang::java::transformations::junit::TempDir
 
 import ParseTree;
-import lang::java::\syntax::Java18; 
+import lang::java::\syntax::Java18;
+import lang::java::manipulation::TestMethod;
 import util::Maybe;
-
-import IO;
 
 public CompilationUnit executeTempDirTransformation(CompilationUnit unit) {
   unit = top-down visit(unit) {
     case MethodDeclaration method => replaceTempFilesWithTempDir(method)
                                           when isMethodATest(method)
   }
-  
+
   return unit;
 }
 
 private MethodDeclaration replaceTempFilesWithTempDir(MethodDeclaration method) {
   bool tempFilesUsed = false;
 
-  BlockStatements statements; 
+  BlockStatements statements;
   switch(extractBlockStatements(method)) {
     case just(stmts): statements = stmts;
     case nothing(): return method;
@@ -55,14 +54,6 @@ private MethodDeclarator addTempDirAnnotation(MethodDeclarator declarator) {
   }
 
   return declarator;
-}
-
-private bool isMethodATest(MethodDeclaration method) {
-  top-down visit(method) {
-    case (Annotation) `@Test`: return true; 
-  }
-
-  return false;
 }
 
 private Maybe[BlockStatements] extractBlockStatements(MethodDeclaration method) {

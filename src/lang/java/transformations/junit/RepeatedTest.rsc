@@ -7,6 +7,7 @@ import String;
 import lang::java::\syntax::Java18;
 import util::Math;
 import util::Maybe;
+import util::MaybeManipulation;
 
 data ForStatementData = forStatementData(
     map[Identifier, int] forInitValues,
@@ -254,12 +255,6 @@ private list[tuple[Identifier, str, IntegerLiteral]] extractForConditionParts(Ex
   }
 
   return forConditionParts;
-}
-
-private &A unwrap(Maybe[&A] opt) {
-  switch(opt) {
-    case just(x): return x;
-  }
 }
 
 private bool relExpContainsIdentifierOnly(RelationalExpression e) {
