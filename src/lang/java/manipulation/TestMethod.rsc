@@ -1,7 +1,9 @@
 module lang::java::manipulation::TestMethod
 
 import ParseTree;
+import String;
 import lang::java::\syntax::Java18;
+import util::Maybe;
 
 public bool isMethodATest(MethodDeclaration method) {
   top-down visit(method) {
@@ -84,6 +86,56 @@ public MethodDeclaration addMethodModifier(MethodDeclaration method, MethodModif
                                                                         '<MethodBody body>`
 
   }
+}
+
+public MethodDeclaration addMethodParameter(MethodDeclaration method, FormalParameter parameterToAdd) {
+  MethodDeclarator declarator;
+  top-down-break visit(method) {
+    case MethodDeclarator d: declarator = d;
+  }
+
+  Identifier methodId = extractMethodName(method);
+
+  list[FormalParameter] methodParameters = [];
+  Maybe[LastFormalParameter] finalParameter = nothing();
+  Maybe[Dims] dims = nothing();
+  top-down visit(declarator) {
+    case FormalParameter f: methodParameters += f;
+    case LastFormalParameter f: finalParameter = just(f);
+    case Dims d: dims = just(d);
+  }
+
+  methodParameters += parameterToAdd;
+  MethodDeclarator newDeclarator = buildMethodDeclarator(methodId, methodParameters, finalParameter, dims);
+
+  return top-down-break visit(method) {
+    case MethodDeclarator _ => newDeclarator
+  }
+}
+
+private MethodDeclarator buildMethodDeclarator(
+    Identifier methodId,
+    list[FormalParameter] parameters,
+    Maybe[LastFormalParameter] finalParameter,
+    Maybe[Dims] dims
+  ) {
+  str methodDeclarator = unparse(methodId) + "(";
+  str paramSeparator = ", ";
+
+  methodDeclarator += ("" |
+                          it + unparse(param) + paramSeparator |
+                          FormalParameter param <- parameters);
+
+  if(finalParameter == nothing()) {
+    if(endsWith(methodDeclarator, paramSeparator)) methodDeclarator = methodDeclarator[..-size(paramSeparator)];
+  } else {
+    parametersStr += unparse(unwrap(finalParameter));
+  }
+  methodDeclarator += ")";
+
+  if(dims != nothing()) methodDeclarator += " " + unparse(unwrap(dims));
+
+  return parse(#MethodDeclarator, methodDeclarator);
 }
 
 private list[MethodModifier] terminatingModifiers() {
