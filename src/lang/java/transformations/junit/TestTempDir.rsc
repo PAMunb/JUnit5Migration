@@ -8,6 +8,7 @@ import util::Testing;
 test bool main() {
   list[bool ()] tests = [
     basicTempFileUsageTest,
+    addTempDirAnnotationWithAnotherParameter,
     addTempDirAnnotationWithOtherParameters
   ];
 
@@ -50,14 +51,38 @@ str code2() =
 str expectedCode2() =
 "public class TestSuite {
 '  @Test
-'  public void tempFileTest(@TempDir File tempDir, int a) {
+'  public void tempFileTest(int a, @TempDir File tempDir) {
+'    File x = tempDir.createTempFile(\"temp\", null);
+'  }
+'}";
+
+test bool addTempDirAnnotationWithAnotherParameter() {
+  original = parse(#CompilationUnit, code2());
+  expected = parse(#CompilationUnit, expectedCode2());
+  res = executeTempDirTransformation(original);
+
+  return expected == res;
+}
+
+str code3() =
+"public class TestSuite {
+'  @Test
+'  public void tempFileTest(int a, str b, int c) {
+'    File x = File.createTempFile(\"temp\", null);
+'  }
+'}";
+
+str expectedCode3() =
+"public class TestSuite {
+'  @Test
+'  public void tempFileTest(int a, str b, int c, @TempDir File tempDir) {
 '    File x = tempDir.createTempFile(\"temp\", null);
 '  }
 '}";
 
 test bool addTempDirAnnotationWithOtherParameters() {
-  original = parse(#CompilationUnit, code2());
-  expected = parse(#CompilationUnit, expectedCode2());
+  original = parse(#CompilationUnit, code3());
+  expected = parse(#CompilationUnit, expectedCode3());
   res = executeTempDirTransformation(original);
 
   return expected == res;
