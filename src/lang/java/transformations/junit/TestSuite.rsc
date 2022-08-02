@@ -18,7 +18,8 @@ test bool main() {
     testSimpleAnnotations,
     testExpectException2,
     testConditionalAssertion,
-    testAssertAll
+    testAssertAll,
+    testAssertAllCheck
   ];
 
   return runAndReportMultipleTests(tests);
@@ -284,7 +285,7 @@ str expectedCode6() =
 "public class TestSuite {
 '  @Test
 '  public void multipleAssertionsTest() {
-'     assertAll(
+'     Assert.assertAll(
 '	  	  () -\> Assert.assertEquals(\"expected\", \"expected\"),
 '	  	  () -\> Assert.assertEquals(\"something\", \"something\"),
 '	  	  () -\> Assert.assertEquals(\"another thing\", \"another thing\"),
@@ -348,4 +349,22 @@ test bool testAssertAll() {
   expected = parse(#CompilationUnit, expectedCode6());
   res = executeAssertAllTransformation(original);
   return res == expected;
+}
+
+str code7() =
+"public class TestSuite {
+'  @Test
+'  public void testWithStrangeMethod() {
+'	  	Assert.assertEquals(\"expected\", \"expected\");
+'	  	Assert.assertEquals(\"something\", \"something\");
+'	  	Assert.assertEquals(\"another thing\", \"another thing\");
+'     somethingElse();
+'	  	Assert.assertEquals(\"thing number 3\", \"thing number 3\");
+'  }
+'}";
+
+test bool testAssertAllCheck() {
+  original = parse(#CompilationUnit, code7());
+  res = executeAssertAllTransformation(original);
+  return res == original;
 }

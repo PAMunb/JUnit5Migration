@@ -1,45 +1,40 @@
 module lang::java::transformations::junit::AssertAll
 
-import lang::java::\syntax::Java18;
 import ParseTree;
+import lang::java::\syntax::Java18;
+import lang::java::manipulation::AssertionStatement;
+import lang::java::manipulation::TestMethod;
 
 public CompilationUnit executeAssertAllTransformation(CompilationUnit unit) {
   unit = top-down visit(unit) {
-    case (MethodDeclaration) `@Test
-                             'public void <Identifier testName>() {
-                             '  <BlockStatements testStatements>
-                             '}` => declareTestWithAssertAll(testName, testStatements)
-                             when allStatementsAreAssertions(testStatements)
+    case MethodDeclaration method => declareTestWithAssertAll(method)
+                             when isMethodATest(method) && allStatementsAreAssertions(method)
   }
 
   return unit;
 }
 
-public MethodDeclaration declareTestWithAssertAll(Identifier testName, BlockStatements testStatements) {
+public MethodDeclaration declareTestWithAssertAll(MethodDeclaration method) {
   list[Expression] assertionsAsLambdas = [];
 
-  top-down visit(testStatements) {
-    case (Statement) `Assert.assertEquals(<Expression a> , <Expression b>);` : {
-      Expression expressionAsLambda = (Expression)
-                                      `() -\> Assert.assertEquals(<Expression a> , <Expression b>)`;
-      assertionsAsLambdas = assertionsAsLambdas + expressionAsLambda;
+  top-down visit(method) {
+    case Statement s : {
+      if(isStatementAnAssertion(s)) {
+        LambdaBody assertion = parse(#LambdaBody, unparse(s)[..-1]);
+        assertionsAsLambdas += (Expression) `() -\> <LambdaBody assertion>`;
+      }
     }
-  };
+  }
 
-  ArgumentList argList = buildAssertAllInvocationArguments(assertionsAsLambdas);
-  Statement assertAllInvocation = (Statement) `assertAll(<ArgumentList argList>);`;
+  Statement assertAll = buildAssertAll(assertionsAsLambdas);
+  MethodBody newBody = (MethodBody) `{
+                                    ' <Statement assertAll>
+                                    '}`;
 
-  return buildRefactoredTest(testName, assertAllInvocation);
+  return replaceMethodBody(method, newBody);
 }
 
-private MethodDeclaration buildRefactoredTest(Identifier testName, Statement assertAllStatement) {
-  return (MethodDeclaration) `@Test
-                             'public void <Identifier testName>() {
-                             '  <Statement assertAllStatement>
-                             '}`;
-}
-
-private ArgumentList buildAssertAllInvocationArguments(list[Expression] assertionsAsLambdas) {
+private Statement buildAssertAll(list[Expression] assertionsAsLambdas) {
   Expression firstAssertionLambda = head(assertionsAsLambdas);
   str assertAllInvocationArguments = unparse(firstAssertionLambda);
 
@@ -47,14 +42,25 @@ private ArgumentList buildAssertAllInvocationArguments(list[Expression] assertio
     assertAllInvocationArguments = assertAllInvocationArguments + ", <unparse(argument)>";
   }
 
-  return parse(#ArgumentList, assertAllInvocationArguments);;
+  ArgumentList lambdas = parse(#ArgumentList, assertAllInvocationArguments);
+  return (Statement) `Assert.assertAll(
+                     ' <ArgumentList lambdas>
+                     ');`;
 }
 
-public bool allStatementsAreAssertions(BlockStatements testStatements) {
+public bool allStatementsAreAssertions(MethodDeclaration method) {
+  MethodBody methodBody;
+  top-down-break visit(method) {
+    case MethodBody b : methodBody = b;
+  }
+
   int assertionCount = 0;
-  top-down visit(testStatements) {
-    case (Statement) `Assert.assertEquals(<Expression _> , <Expression _>);` : assertionCount += 1;
-    case (Statement) `<Statement _>`: return false;
+  top-down visit(methodBody) {
+    case Statement s: if(isStatementAnAssertion(s)) {
+        assertionCount += 1;
+      } else {
+        return false;
+      }
   }
 
   return assertionCount > 0;
