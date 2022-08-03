@@ -14,17 +14,22 @@ test bool main() {
   	ascendingExclusiveForStatementRepeatedTest,
   	ascendingInclusiveForStatementRepeatedTest,
   	descendingExclusiveForStatementRepeatedTest,
-  	descendingInclusiveForStatementRepeatedTest
+  	descendingInclusiveForStatementRepeatedTest,
+    transformsForWithMultipleAssertions,
+    doesNotTransformWhenThereIsOtherStatements
   ];
 
   return runAndReportMultipleTests(tests);
 }
 
 test bool extractForStatementDataTest() {
-  ForStatement forStatement = (ForStatement)
+  Statement forStatement = (Statement)
                                 `for (int i = 0; i \< 5; i++) {
                                 '  Assert.assertEquals("expected", "expected");
                                 '}`;
+  MethodBody body = (MethodBody) `{
+                                 '  <Statement forStatement>
+                                 '}`;
 
   Identifier identifierI = parse(#Identifier, "i");
   ForStatementData expect = forStatementData(
@@ -36,7 +41,7 @@ test bool extractForStatementDataTest() {
   );
 
 
-  ForStatementData res = unwrap(extractForStatementData(forStatement));
+  ForStatementData res = unwrap(extractForStatementData(body));
 
   return expect == res;
 }
@@ -147,4 +152,54 @@ test bool descendingInclusiveForStatementRepeatedTest() {
   res = executeRepeatedTestTransformation(original);
 
   return expected == res;
+}
+
+str code5() =
+"public class TestSuite {
+'  @Test
+'  public void multipleAssertionsTest() {
+'     for (int i = 7; i \>= 1; i--) {
+'	  	  Assert.assertEquals(\"expected\", \"expected\");
+'	  	  Assert.assertTrue(true);
+'	  	  Assert.assertNull(null);
+'     }
+'  }
+'}";
+
+str expectedCode5() =
+"public class TestSuite {
+'  @Test
+'  @RepeatedTest(7)
+'  public void multipleAssertionsTest() {
+'	   Assert.assertEquals(\"expected\", \"expected\");
+'	   Assert.assertTrue(true);
+'	   Assert.assertNull(null);
+'  }
+'}";
+
+test bool transformsForWithMultipleAssertions() {
+  original = parse(#CompilationUnit, code5());
+  expected = parse(#CompilationUnit, expectedCode5());
+  res = executeRepeatedTestTransformation(original);
+
+  return expected == res;
+}
+
+str code6() =
+"public class TestSuite {
+'  @Test
+'  public void multipleAssertionsTest() {
+'     for (int i = 7; i \>= 1; i--) {
+'	  	  Assert.assertEquals(\"expected\", \"expected\");
+'	  	  int i = i;
+'	  	  Assert.assertNull(null);
+'     }
+'  }
+'}";
+
+test bool doesNotTransformWhenThereIsOtherStatements() {
+  original = parse(#CompilationUnit, code6());
+  res = executeRepeatedTestTransformation(original);
+
+  return original == res;
 }

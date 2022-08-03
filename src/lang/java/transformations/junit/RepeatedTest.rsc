@@ -5,9 +5,12 @@ import ParseTree;
 import Set;
 import String;
 import lang::java::\syntax::Java18;
+import lang::java::manipulation::AssertionStatement;
+import lang::java::manipulation::TestMethod;
 import util::Math;
 import util::Maybe;
 import util::MaybeManipulation;
+import IO;
 
 data ForStatementData = forStatementData(
     map[Identifier, int] forInitValues,
@@ -19,16 +22,14 @@ data ForStatementData = forStatementData(
 
 public CompilationUnit executeRepeatedTestTransformation(CompilationUnit unit) {
   unit = top-down visit(unit) {
-    case (MethodDeclaration) `@Test
-                             'public void <Identifier testName>() {
-                             '  <ForStatement forStmt>
-                             '}`: {
-                               switch(extractForStatementData(forStmt)) {
+    case MethodDeclaration method : {
+                               switch(extractForStatementData(extractMethodBody(method))) {
                                  case just(forStmtData): {
-                                   if(isTransformationApplyable(forStmtData) && resolveIterationCount(forStmtData) != nothing()) {
-                                     insert(declareTestWithRepeatedTest(testName, forStmtData));
+                                   if(isTransformationApplyable(forStmtData) && isSomething(resolveIterationCount(forStmtData))) {
+                                     insert(declareTestWithRepeatedTest(method, forStmtData));
                                    }
                                  }
+                                 case nothing(): fail;
                                }
                              }
   }
@@ -36,23 +37,12 @@ public CompilationUnit executeRepeatedTestTransformation(CompilationUnit unit) {
   return unit;
 }
 
-public MethodDeclaration declareTestWithRepeatedTest(Identifier testName, ForStatementData f) {
-  Statement statement = f.statement;
+public MethodDeclaration declareTestWithRepeatedTest(MethodDeclaration method, ForStatementData f) {
   IntegerLiteral iterationCount = parse(#IntegerLiteral, toString(unwrap(resolveIterationCount(f))));
+  Annotation repeatedTestAnnotation = (Annotation) `@RepeatedTest(<IntegerLiteral iterationCount>)`;
+  MethodBody newBody = parse(#MethodBody, unparse(f.statement));
 
-  bottom-up-break visit(statement) {
-    case Block b: return buildRefactoredTest(testName, b, iterationCount);
-  };
-}
-
-private MethodDeclaration buildRefactoredTest(
-                                              Identifier testName,
-                                              Block b,
-                                              IntegerLiteral iterationCount
-                                             ) {
-  return (MethodDeclaration) `@Test
-                             '@RepeatedTest(<IntegerLiteral iterationCount>)
-                             'public void <Identifier testName>() <Block b>`;
+  return replaceMethodBody(addMethodAnnotation(method, repeatedTestAnnotation), newBody);
 }
 
 private Maybe[int] resolveIterationCount(ForStatementData f) {
@@ -116,15 +106,27 @@ private list[Identifier] extractIdentifiers(StatementExpressionList expressions)
 
 private bool statementRepeatsAssertionsOnly(ForStatementData f) {
   int assertionCount = 0;
-  top-down visit(f.statement) {
-    case (Statement)
-      `{
-      ' <Statement _>
-      '}` : {};
-    case (Statement) `Assert.assertEquals(<Expression _> , <Expression _>);`: assertionCount += 1;
-    case Statement s: {
-      return false;
+  top-down-break visit(f.statement) {
+    case Block b : top-down visit(b) {
+      case BlockStatement bs : {
+        if(isStatementAnAssertion(bs)) {
+          assertionCount += 1;
+        } else {
+          return false;
+        }
+      }
     }
+    case EmptyStatement _ : return false;
+    case ExpressionStatement _ : return false;
+    case AssertStatement _ : return false;
+    case SwitchStatement _ : return false;
+    case DoStatement _ : return false;
+    case BreakStatement _ : return false;
+    case ContinueStatement _ : return false;
+    case ReturnStatement _ : return false;
+    case SynchronizedStatement _ : return false;
+    case ThrowStatement _ : return false;
+    case TryStatement _ : return false;
   }
 
   return assertionCount > 0;
@@ -136,10 +138,13 @@ private bool conditionUsesSingleUpdateIdentifier(ForStatementData f) {
           head(f.forConditionParts)[0] == head(f.forUpdateIdentifiers);
 }
 
-public Maybe[ForStatementData] extractForStatementData(ForStatement forStatement) {
+public Maybe[ForStatementData] extractForStatementData(MethodBody methodBody) {
+  Maybe[ForStatement] forStatement = extractForStatement(methodBody);
+  if(isNothing(forStatement)) return nothing();
+
   Maybe[ForStatementData] forStmtData = nothing();
 
-  top-down visit(forStatement) {
+  top-down visit(unwrap(forStatement)) {
     case (ForStatement)
             `for(<ForInit fi>; <Expression ex>; <ForUpdate fu>) <Statement stmt>` : {
               forStmtData = just(forStatementData(
@@ -150,12 +155,19 @@ public Maybe[ForStatementData] extractForStatementData(ForStatement forStatement
                   stmt
                   ));
             }
-    // case (ForStatement)
-            // `for(<ForInit _>; Expression _; ForUpdate fu) <StatementNoShortIf stmt>`: {
-            // }
   }
 
   return forStmtData;
+}
+
+private Maybe[ForStatement] extractForStatement(MethodBody methodBody) {
+  top-down visit(methodBody) {
+    case (MethodBody) `{
+                      ' <ForStatement f>
+                      '}` : return just(f);
+  }
+
+  return nothing();
 }
 
 private map[Identifier, int] extractForInitValues(ForInit fi) {
@@ -175,16 +187,16 @@ private map[Identifier, int] extractForInitValues(ForInit fi) {
         case IntegerLiteral intl: v = intl;
       };
 
-      if(identifier != nothing() && v != nothing() &&
+      if(isSomething(identifier) && isSomething(v) &&
           unparse(unwrap(identifier)) == unparse(id) && unparse(unwrap(v)) == unparse(val)) {
         values += (unwrap(identifier) : unwrap(v));
       }
     }
     case (LocalVariableDeclaration) `<UnannType t> <VariableDeclaratorList declarations>` : {
       top-down visit(t) {
-        case IntegralType itT : {
-          str its = unparse(itT);
-          if(!(its == "int" || its == "short")) fail;
+        case IntegralType iType : {
+          str iTypeStr = unparse(iType);
+          if(!(iTypeStr == "int" || iTypeStr == "short")) fail;
         }
       }
 
@@ -208,9 +220,9 @@ private map[Identifier, int] extractForInitValues(ForInit fi) {
             }
           }
 
-          if(v != nothing() && identifier != nothing() && identifierCount == 1) {
+          if(isSomething(v) && isSomething(identifier) && identifierCount == 1) {
             values += (unwrap(identifier) : unwrap(v));
-           }
+          }
         }
       }
     }
