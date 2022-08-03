@@ -5,6 +5,16 @@ import String;
 import lang::java::\syntax::Java18;
 import util::Maybe;
 
+public bool isStatementAnAssertion(BlockStatement statement) {
+  top-down visit(statement) {
+    case LocalVariableDeclarationStatement _ : return false;
+    case ClassDeclaration _ : return false;
+    case Statement s : return isStatementAnAssertion(s);
+  }
+
+  return false;
+}
+
 public bool isStatementAnAssertion(Statement statement) {
   top-down visit(statement) {
     case StatementWithoutTrailingSubstatement s : return isStatementAnAssertion(s);
