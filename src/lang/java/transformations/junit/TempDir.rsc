@@ -15,11 +15,15 @@ public CompilationUnit executeTempDirTransformation(CompilationUnit unit) {
 }
 
 private MethodDeclaration replaceTempFilesWithTempDir(MethodDeclaration method) {
+  bool tempDirUsed = false;
   method = top-down visit(method) {
     case (MethodInvocation) `File.createTempFile(<ArgumentList args>)`: {
+      tempDirUsed = true;
       insert((MethodInvocation) `tempDir.createTempFile(<ArgumentList args>)`);
     }
   }
 
-  return addMethodParameter(method, (FormalParameter) `@TempDir File tempDir`);
+  if(tempDirUsed) method = addMethodParameter(method, (FormalParameter) `@TempDir File tempDir`);
+
+  return method;
 }

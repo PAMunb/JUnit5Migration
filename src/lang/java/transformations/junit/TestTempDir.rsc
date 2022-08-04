@@ -9,7 +9,8 @@ test bool main() {
   list[bool ()] tests = [
     basicTempFileUsageTest,
     addTempDirAnnotationWithAnotherParameter,
-    addTempDirAnnotationWithOtherParameters
+    addTempDirAnnotationWithOtherParameters,
+    doNotApplyWhenNoTempFilesAreUsed
   ];
 
   return runAndReportMultipleTests(tests);
@@ -86,4 +87,19 @@ test bool addTempDirAnnotationWithOtherParameters() {
   res = executeTempDirTransformation(original);
 
   return expected == res;
+}
+
+str code4() =
+"public class TestSuite {
+'  @Test
+'  public void tempFileTest(int a, str b, int c) {
+'    Assert.assertTrue(something());
+'  }
+'}";
+
+test bool doNotApplyWhenNoTempFilesAreUsed() {
+  original = parse(#CompilationUnit, code4());
+  res = executeTempDirTransformation(original);
+
+  return original == res;
 }
