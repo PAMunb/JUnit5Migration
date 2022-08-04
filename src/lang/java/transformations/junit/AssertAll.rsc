@@ -39,7 +39,7 @@ private Statement buildAssertAll(list[Expression] assertionsAsLambdas) {
   str assertAllInvocationArguments = unparse(firstAssertionLambda);
 
   for (Expression argument <- tail(assertionsAsLambdas)) {
-    assertAllInvocationArguments = assertAllInvocationArguments + ", <unparse(argument)>";
+    assertAllInvocationArguments += ", <unparse(argument)>";
   }
 
   ArgumentList lambdas = parse(#ArgumentList, assertAllInvocationArguments);

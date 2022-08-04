@@ -98,7 +98,7 @@ private list[Identifier] extractIdentifiers(StatementExpressionList expressions)
   list[Identifier] identifiers = [];
 
   top-down visit(expressions) {
-    case (Identifier) `<Identifier i>`: identifiers = identifiers + i;
+    case (Identifier) `<Identifier i>`: identifiers += i;
   }
 
   return identifiers;
@@ -238,28 +238,28 @@ private list[tuple[Identifier, str, IntegerLiteral]] extractForConditionParts(Ex
   top-down-break visit(ex) {
     case (RelationalExpression) `<RelationalExpression l> \< <ShiftExpression r>`: {
       if(relExpContainsIdentifierOnly(l) && sftExpContainsIntegerOnly(r)) {
-        forConditionParts = forConditionParts + [<
+        forConditionParts += [<
           unwrap(extractIdentifierFromExpression(l)), "\<", unwrap(extractIntegerFromExpression(r))
          >];
       }
     }
     case (RelationalExpression) `<RelationalExpression l> \<= <ShiftExpression r>`: {
       if(relExpContainsIdentifierOnly(l) && sftExpContainsIntegerOnly(r)) {
-        forConditionParts = forConditionParts + [<
+        forConditionParts += [<
           unwrap(extractIdentifierFromExpression(l)), "\<=", unwrap(extractIntegerFromExpression(r))
          >];
       }
     }
     case (RelationalExpression) `<RelationalExpression l> \> <ShiftExpression r>`: {
       if(relExpContainsIdentifierOnly(l) && sftExpContainsIntegerOnly(r)) {
-        forConditionParts = forConditionParts + [<
+        forConditionParts += [<
           unwrap(extractIdentifierFromExpression(l)), "\>", unwrap(extractIntegerFromExpression(r))
          >];
       }
     }
     case (RelationalExpression) `<RelationalExpression l> \>= <ShiftExpression r>`: {
       if(relExpContainsIdentifierOnly(l) && sftExpContainsIntegerOnly(r)) {
-        forConditionParts = forConditionParts + [<
+        forConditionParts += [<
           unwrap(extractIdentifierFromExpression(l)), "\>=", unwrap(extractIntegerFromExpression(r))
          >];
       }

@@ -4,6 +4,7 @@ import ParseTree;
 import String;
 import lang::java::\syntax::Java18;
 import util::Maybe;
+import util::MaybeManipulation;
 
 public bool isMethodATest(MethodDeclaration method) {
   top-down visit(method) {
@@ -45,7 +46,7 @@ public list[Annotation] extractMethodAnnotations(MethodDeclaration method) {
   top-down visit(method) {
     case MethodModifier m: {
       top-down-break visit(m) {
-        case Annotation a: annotations = annotations + a;
+        case Annotation a: annotations += a;
       }
     }
   }
@@ -57,7 +58,7 @@ public MethodDeclaration addMethodAnnotation(MethodDeclaration method, Annotatio
   list[MethodModifier] modifiers = [];
 
   top-down visit(method) {
-    case MethodModifier m: modifiers = modifiers + m;
+    case MethodModifier m: modifiers += m;
   }
 
   MethodModifier annotationMod = parse(#MethodModifier, unparse(annotation));
@@ -126,14 +127,14 @@ private MethodDeclarator buildMethodDeclarator(
                           it + unparse(param) + paramSeparator |
                           FormalParameter param <- parameters);
 
-  if(finalParameter == nothing()) {
-    if(endsWith(methodDeclarator, paramSeparator)) methodDeclarator = methodDeclarator[..-size(paramSeparator)];
-  } else {
+  if(isSomething(finalParameter)) {
     parametersStr += unparse(unwrap(finalParameter));
+  } else {
+    if(endsWith(methodDeclarator, paramSeparator)) methodDeclarator = methodDeclarator[..-size(paramSeparator)];
   }
   methodDeclarator += ")";
 
-  if(dims != nothing()) methodDeclarator += " " + unparse(unwrap(dims));
+  if(isSomething(dims)) methodDeclarator += " " + unparse(unwrap(dims));
 
   return parse(#MethodDeclarator, methodDeclarator);
 }

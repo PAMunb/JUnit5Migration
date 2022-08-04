@@ -13,7 +13,7 @@ public CompilationUnit executeConditionalAssertionTransformation(CompilationUnit
       if(isMethodATest(method)) {
         switch(applyTransformation(method)) {
           case just(transformedMethodData): {
-            conditionalMethods = conditionalMethods + <transformedMethodData[1], transformedMethodData[2]>;
+            conditionalMethods += <transformedMethodData[1], transformedMethodData[2]>;
             insert(transformedMethodData[0]);
           }
           case nothing(): fail;
