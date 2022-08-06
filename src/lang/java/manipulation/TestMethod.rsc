@@ -40,6 +40,27 @@ public MethodDeclaration replaceMethodBody(MethodDeclaration method, MethodBody 
   }
 }
 
+public Maybe[MethodDeclaration] replaceMethodAnnotation(
+    MethodDeclaration method,
+    Annotation annotationToReplace,
+    Annotation newAnnotation
+  ) {
+  bool replaced = false;
+
+  method = top-down-break visit(method) {
+    case Annotation ann : {
+      if(ann == annotationToReplace) {
+        replaced = true;
+        insert(newAnnotation);
+      }
+    }
+  }
+
+  if(replaced) return just(method);
+
+  return nothing();
+}
+
 public list[Annotation] extractMethodAnnotations(MethodDeclaration method) {
   list[Annotation] annotations = [];
 
