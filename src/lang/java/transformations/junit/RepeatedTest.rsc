@@ -10,7 +10,6 @@ import lang::java::manipulation::TestMethod;
 import util::Math;
 import util::Maybe;
 import util::MaybeManipulation;
-import IO;
 
 data ForStatementData = forStatementData(
     map[Identifier, int] forInitValues,

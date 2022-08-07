@@ -87,13 +87,3 @@ private CompilationUnit declareNewMethod(Expression expression, Identifier metho
   }
   return unit;
 }
-
-public bool isStatementConditionalAssertion(BlockStatements s) {
-  top-down visit(s) {
-    case (Statement) `if(<Expression _>) {
-                     '   Assert.assertEquals(<Expression _>, <Expression _>);
-                     '}` : return true;
-  }
-
-  return false;
-}
