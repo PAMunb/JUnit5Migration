@@ -73,7 +73,7 @@ private MethodDeclaration addParameterizedTestAnnotation(
   str argsAsString = "\n";
   for(list[Argument] args <- arguments) {
     argsAsString += 
-      ("\"" | it + unparse(arg.expression) + ", " | Argument arg <- args)[..-2] + 
+      ("\"" | it + argToCsvSource(arg) + ", " | Argument arg <- args)[..-2] + 
       "\",\n";
   }
 
@@ -93,6 +93,14 @@ private MethodInvocation extractFirstMethodInvocation(MethodBody body) {
   top-down visit(body) {
     case MethodInvocation m : return m;
   }
+}
+
+private str argToCsvSource(Argument arg) {
+  str expression = unparse(arg.expression);
+
+  if(arg.argType == "String") expression = "\'<expression[1..][..-1]>\'";
+
+  return expression;
 }
 
 private bool allArgumentsHaveSameType(list[list[Argument]] args) {
