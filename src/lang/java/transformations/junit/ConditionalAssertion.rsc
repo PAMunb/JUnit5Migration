@@ -23,7 +23,7 @@ public CompilationUnit executeConditionalAssertionTransformation(CompilationUnit
   }
 
   return (unit |
-            declareNewMethod(t.condition, t.name, unit) |
+            declareNewMethod(t.condition, t.name, it) |
             tuple[Identifier name, Expression condition] t <- conditionalMethods);
 }
 
@@ -45,7 +45,7 @@ private Maybe[tuple[MethodDeclaration declaration, Identifier enablerName, Expre
                                             );
       return just(<transformedMethod, parse(#Identifier, conditionalMethodName), condition>);
     }
-    case MethodBody _: fail;
+    case MethodBody _: return nothing();
   }
 
   return nothing();
