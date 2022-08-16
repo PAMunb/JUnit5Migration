@@ -3,7 +3,6 @@ module lang::java::transformations::junit::TestSuite
 import ParseTree;
 import lang::java::\syntax::Java18;
 import lang::java::transformations::junit::AssertAll;
-import lang::java::transformations::junit::ConditionalAssertion;
 import lang::java::transformations::junit::ExpectedException;
 import lang::java::transformations::junit::ExpectedTimeout;
 import lang::java::transformations::junit::SimpleAnnotations;
@@ -17,7 +16,6 @@ test bool main() {
     testExpectedTimeoutNoMatch,
     testSimpleAnnotations,
     testExpectException2,
-    testConditionalAssertion,
     testAssertAll,
     testAssertAllCheck
   ];
@@ -116,24 +114,6 @@ str code4() =
 '    System.out.println(flow);
 '  }
 '}";
-
-str code5() =
-"public class TestSuite {
-'  @Test
-'  public void conditionalAssertionWSingleStatement() {
-'    if(true) {
-'		  Assert.assertEquals(\"expected\", \"expected\");
-'	   }
-'  }
-
-'  public void conditionalAssertionWMutilpleStatements() {
-'    if(true) {
-'		  Assert.assertEquals(\"expected\", \"expected\");
-'		  Assert.assertEquals(\"something\", \"something\");
-'	   }
-'  }
-'}";
-
 
 str code6() =
 "public class TestSuite {
@@ -260,27 +240,6 @@ str expectedCode1() =
   '
   '}";
 
-str expectedCode5() =
-"public class TestSuite {
-'  @Test
-'  @EnableIf(\"conditionalAssertionWSingleStatementCondition\")
-'  public void conditionalAssertionWSingleStatement() {
-'	   Assert.assertEquals(\"expected\", \"expected\");
-'  }
-
-'  public void conditionalAssertionWMutilpleStatements() {
-'    if(true) {
-'		  Assert.assertEquals(\"expected\", \"expected\");
-'		  Assert.assertEquals(\"something\", \"something\");
-'	   }
-'  }
-'
-'  public boolean conditionalAssertionWSingleStatementCondition() {
-'    return true;
-'  }
-'
-'}";
-
 str expectedCode6() =
 "public class TestSuite {
 '  @Test
@@ -334,13 +293,6 @@ test bool testExpectException2() {
   original = parse(#CompilationUnit, code4());
   expected = parse(#CompilationUnit, expectedCode4());
   res = executeExpectedExceptionTransformation(original);
-  return res == expected;
-}
-
-test bool testConditionalAssertion() {
-  original = parse(#CompilationUnit, code5());
-  expected = parse(#CompilationUnit, expectedCode5());
-  res = executeConditionalAssertionTransformation(original);
   return res == expected;
 }
 
