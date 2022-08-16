@@ -38,10 +38,15 @@ public CompilationUnit executeRepeatedTestTransformation(CompilationUnit unit) {
 
 public MethodDeclaration declareTestWithRepeatedTest(MethodDeclaration method, ForStatementData f) {
   IntegerLiteral iterationCount = parse(#IntegerLiteral, toString(unwrap(resolveIterationCount(f))));
-  Annotation repeatedTestAnnotation = (Annotation) `@RepeatedTest(<IntegerLiteral iterationCount>)`;
   MethodBody newBody = parse(#MethodBody, unparse(f.statement));
 
-  return replaceMethodBody(addMethodAnnotation(method, repeatedTestAnnotation), newBody);
+  Annotation repeatedTestAnnotation = (Annotation) `@RepeatedTest(<IntegerLiteral iterationCount>)`;
+  Annotation regularTestAnnotation = (Annotation) `@Test`;
+
+  return replaceMethodBody(
+    unwrap(replaceMethodAnnotation(method, regularTestAnnotation, repeatedTestAnnotation)),
+    newBody
+  );
 }
 
 private Maybe[int] resolveIterationCount(ForStatementData f) {
@@ -52,8 +57,8 @@ private Maybe[int] resolveIterationCount(ForStatementData f) {
   }
 str updateExpression = unparse(f.forUpdateExpression);
   str id = unparse(head(f.forUpdateIdentifiers));
-
-  int count = toInt(unparse(forCondition.vl)) - f.forInitValues[forCondition.id];
+  str unparsedConditionValue = replaceAll(unparse(forCondition.vl), "_", "");
+  int count = toInt(unparsedConditionValue) - f.forInitValues[forCondition.id];
   if(count < 0) count *= -1;
 
 
@@ -81,7 +86,6 @@ str updateExpression = unparse(f.forUpdateExpression);
 
 private bool isTransformationApplyable(ForStatementData forStmtData) {
   return !statementUsesForUpdateIdentifier(forStmtData) &&
-          statementRepeatsAssertionsOnly(forStmtData) &&
           conditionUsesSingleUpdateIdentifier(forStmtData);
 }
 
@@ -101,34 +105,6 @@ private list[Identifier] extractIdentifiers(StatementExpressionList expressions)
   }
 
   return identifiers;
-}
-
-private bool statementRepeatsAssertionsOnly(ForStatementData f) {
-  int assertionCount = 0;
-  top-down-break visit(f.statement) {
-    case Block b : top-down visit(b) {
-      case BlockStatement bs : {
-        if(isStatementAnAssertion(bs)) {
-          assertionCount += 1;
-        } else {
-          return false;
-        }
-      }
-    }
-    case EmptyStatement _ : return false;
-    case ExpressionStatement _ : return false;
-    case AssertStatement _ : return false;
-    case SwitchStatement _ : return false;
-    case DoStatement _ : return false;
-    case BreakStatement _ : return false;
-    case ContinueStatement _ : return false;
-    case ReturnStatement _ : return false;
-    case SynchronizedStatement _ : return false;
-    case ThrowStatement _ : return false;
-    case TryStatement _ : return false;
-  }
-
-  return assertionCount > 0;
 }
 
 private bool conditionUsesSingleUpdateIdentifier(ForStatementData f) {
