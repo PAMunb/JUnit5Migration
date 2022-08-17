@@ -2,7 +2,6 @@ module lang::java::transformations::junit::TestSuite
 
 import ParseTree;
 import lang::java::\syntax::Java18;
-import lang::java::transformations::junit::AssertAll;
 import lang::java::transformations::junit::ExpectedException;
 import lang::java::transformations::junit::ExpectedTimeout;
 import lang::java::transformations::junit::SimpleAnnotations;
@@ -15,9 +14,7 @@ test bool main() {
     testExpectedTimeout,
     testExpectedTimeoutNoMatch,
     testSimpleAnnotations,
-    testExpectException2,
-    testAssertAll,
-    testAssertAllCheck
+    testExpectException2
   ];
 
   return runAndReportMultipleTests(tests);
@@ -112,17 +109,6 @@ str code4() =
 '    dinic = new DinicMFImpl\<\>(g);
 '    double flow = dinic.getMaximumFlowValue(v1, v1);
 '    System.out.println(flow);
-'  }
-'}";
-
-str code6() =
-"public class TestSuite {
-'  @Test
-'  public void multipleAssertionsTest() {
-'	  	Assert.assertEquals(\"expected\", \"expected\");
-'	  	Assert.assertEquals(\"something\", \"something\");
-'	  	Assert.assertEquals(\"another thing\", \"another thing\");
-'	  	Assert.assertEquals(\"thing number 3\", \"thing number 3\");
 '  }
 '}";
 
@@ -240,19 +226,6 @@ str expectedCode1() =
   '
   '}";
 
-str expectedCode6() =
-"public class TestSuite {
-'  @Test
-'  public void multipleAssertionsTest() {
-'     Assert.assertAll(
-'	  	  () -\> Assert.assertEquals(\"expected\", \"expected\"),
-'	  	  () -\> Assert.assertEquals(\"something\", \"something\"),
-'	  	  () -\> Assert.assertEquals(\"another thing\", \"another thing\"),
-'	  	  () -\> Assert.assertEquals(\"thing number 3\", \"thing number 3\")
-'     );
-'  }
-'}";
-
 test bool testExpectException() {
   original = parse(#CompilationUnit, code1());
   expected = parse(#CompilationUnit, expectedCode1());
@@ -294,29 +267,4 @@ test bool testExpectException2() {
   expected = parse(#CompilationUnit, expectedCode4());
   res = executeExpectedExceptionTransformation(original);
   return res == expected;
-}
-
-test bool testAssertAll() {
-  original = parse(#CompilationUnit, code6());
-  expected = parse(#CompilationUnit, expectedCode6());
-  res = executeAssertAllTransformation(original);
-  return res == expected;
-}
-
-str code7() =
-"public class TestSuite {
-'  @Test
-'  public void testWithStrangeMethod() {
-'	  	Assert.assertEquals(\"expected\", \"expected\");
-'	  	Assert.assertEquals(\"something\", \"something\");
-'	  	Assert.assertEquals(\"another thing\", \"another thing\");
-'     somethingElse();
-'	  	Assert.assertEquals(\"thing number 3\", \"thing number 3\");
-'  }
-'}";
-
-test bool testAssertAllCheck() {
-  original = parse(#CompilationUnit, code7());
-  res = executeAssertAllTransformation(original);
-  return res == original;
 }
