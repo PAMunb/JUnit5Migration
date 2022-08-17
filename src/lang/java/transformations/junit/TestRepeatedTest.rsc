@@ -16,7 +16,7 @@ test bool main() {
   	descendingExclusiveForStatementRepeatedTest,
   	descendingInclusiveForStatementRepeatedTest,
     transformsForWithMultipleAssertions,
-    doesNotTransformWhenThereIsOtherStatements
+    transformsWhenThereAreOtherStatements
   ];
 
   return runAndReportMultipleTests(tests);
@@ -25,7 +25,7 @@ test bool main() {
 test bool extractForStatementDataTest() {
   Statement forStatement = (Statement)
                                 `for (int i = 0; i \< 5; i++) {
-                                '  Assert.assertEquals("expected", "expected");
+                                '  Assertions.assertEquals("expected", "expected");
                                 '}`;
   MethodBody body = (MethodBody) `{
                                  '  <Statement forStatement>
@@ -37,7 +37,7 @@ test bool extractForStatementDataTest() {
     parse(#StatementExpressionList, "i++"),
     [identifierI],
     [<identifierI, "\<", parse(#IntegerLiteral, "5")>],
-    parse(#Statement, "{\n  Assert.assertEquals(\"expected\", \"expected\");\n}")
+    parse(#Statement, "{\n  Assertions.assertEquals(\"expected\", \"expected\");\n}")
   );
 
 
@@ -51,17 +51,16 @@ str code1() =
 '  @Test
 '  public void multipleAssertionsTest() {
 '     for (int i = 2; i \< 5; i++) {
-'	  	  Assert.assertEquals(\"expected\", \"expected\");
+'	  	  Assertions.assertEquals(\"expected\", \"expected\");
 '     }
 '  }
 '}";
 
 str expectedCode1() =
 "public class TestSuite {
-'  @Test
 '  @RepeatedTest(3)
 '  public void multipleAssertionsTest() {
-'	   Assert.assertEquals(\"expected\", \"expected\");
+'	   Assertions.assertEquals(\"expected\", \"expected\");
 '  }
 '}";
 
@@ -78,17 +77,16 @@ str code2() =
 '  @Test
 '  public void multipleAssertionsTest() {
 '     for (int i = 2; i \<= 5; i++) {
-'	  	  Assert.assertEquals(\"expected\", \"expected\");
+'	  	  Assertions.assertEquals(\"expected\", \"expected\");
 '     }
 '  }
 '}";
 
 str expectedCode2() =
 "public class TestSuite {
-'  @Test
 '  @RepeatedTest(4)
 '  public void multipleAssertionsTest() {
-'	   Assert.assertEquals(\"expected\", \"expected\");
+'	   Assertions.assertEquals(\"expected\", \"expected\");
 '  }
 '}";
 
@@ -105,17 +103,16 @@ str code3() =
 '  @Test
 '  public void multipleAssertionsTest() {
 '     for (int i = 7; i \> 1; i--) {
-'	  	  Assert.assertEquals(\"expected\", \"expected\");
+'	  	  Assertions.assertEquals(\"expected\", \"expected\");
 '     }
 '  }
 '}";
 
 str expectedCode3() =
 "public class TestSuite {
-'  @Test
 '  @RepeatedTest(6)
 '  public void multipleAssertionsTest() {
-'	   Assert.assertEquals(\"expected\", \"expected\");
+'	   Assertions.assertEquals(\"expected\", \"expected\");
 '  }
 '}";
 
@@ -132,17 +129,16 @@ str code4() =
 '  @Test
 '  public void multipleAssertionsTest() {
 '     for (int i = 7; i \>= 1; i--) {
-'	  	  Assert.assertEquals(\"expected\", \"expected\");
+'	  	  Assertions.assertEquals(\"expected\", \"expected\");
 '     }
 '  }
 '}";
 
 str expectedCode4() =
 "public class TestSuite {
-'  @Test
 '  @RepeatedTest(7)
 '  public void multipleAssertionsTest() {
-'	   Assert.assertEquals(\"expected\", \"expected\");
+'	   Assertions.assertEquals(\"expected\", \"expected\");
 '  }
 '}";
 
@@ -159,21 +155,20 @@ str code5() =
 '  @Test
 '  public void multipleAssertionsTest() {
 '     for (int i = 7; i \>= 1; i--) {
-'	  	  Assert.assertEquals(\"expected\", \"expected\");
-'	  	  Assert.assertTrue(true);
-'	  	  Assert.assertNull(null);
+'	  	  Assertions.assertEquals(\"expected\", \"expected\");
+'	  	  Assertions.assertTrue(true);
+'	  	  Assertions.assertNull(null);
 '     }
 '  }
 '}";
 
 str expectedCode5() =
 "public class TestSuite {
-'  @Test
 '  @RepeatedTest(7)
 '  public void multipleAssertionsTest() {
-'	   Assert.assertEquals(\"expected\", \"expected\");
-'	   Assert.assertTrue(true);
-'	   Assert.assertNull(null);
+'	   Assertions.assertEquals(\"expected\", \"expected\");
+'	   Assertions.assertTrue(true);
+'	   Assertions.assertNull(null);
 '  }
 '}";
 
@@ -190,16 +185,27 @@ str code6() =
 '  @Test
 '  public void multipleAssertionsTest() {
 '     for (int i = 7; i \>= 1; i--) {
-'	  	  Assert.assertEquals(\"expected\", \"expected\");
-'	  	  int i = i;
-'	  	  Assert.assertNull(null);
+'	  	  Assertions.assertEquals(\"expected\", \"expected\");
+'	  	  AClass.someSideEffect();
+'	  	  Assertions.assertNull(null);
 '     }
 '  }
 '}";
 
-test bool doesNotTransformWhenThereIsOtherStatements() {
+str expectedCode6() =
+"public class TestSuite {
+'  @RepeatedTest(7)
+'  public void multipleAssertionsTest() {
+'	   Assertions.assertEquals(\"expected\", \"expected\");
+'	   AClass.someSideEffect();
+'	   Assertions.assertNull(null);
+'  }
+'}";
+
+test bool transformsWhenThereAreOtherStatements() {
   original = parse(#CompilationUnit, code6());
+  expected = parse(#CompilationUnit, expectedCode6());
   res = executeRepeatedTestTransformation(original);
 
-  return original == res;
+  return res == expected;
 }
