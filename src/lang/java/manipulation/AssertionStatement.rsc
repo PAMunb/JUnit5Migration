@@ -71,9 +71,12 @@ public bool isStatementAnAssertion(StatementExpression statement) {
 
 public bool isStatementAnAssertion(MethodInvocation statement) {
   top-down visit(statement) {
+    case (MethodInvocation) `Assertions.<Identifier methodName>(<ArgumentList _>)` : {
+      return methodName in assertionMethods();
+    }
     case (MethodInvocation) `Assert.<Identifier methodName>(<ArgumentList _>)` : {
       return methodName in assertionMethods();
-    } 
+    }
     case (MethodInvocation) `<MethodName methodName>(<ArgumentList _>)` : {
       return parse(#Identifier, unparse(methodName)) in assertionMethods();
     } 
