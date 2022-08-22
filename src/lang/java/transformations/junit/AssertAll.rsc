@@ -18,22 +18,21 @@ public CompilationUnit executeAssertAllTransformation(CompilationUnit unit) {
 
 public MethodDeclaration declareTestWithAssertAll(MethodDeclaration method) {
   list[BlockStatement] refactoredStatements = [];
-  list[Expression] assertionLambdaGroup = [];
+  list[BlockStatement] assertionGroup = [];
   Maybe[BlockStatement] previousStmt = nothing();
 
   top-down-break visit(extractMethodBody(method)) {
     case BlockStatement s : {
       if(isStatementAnAssertion(s)) {
-        LambdaBody assertion = parse(#LambdaBody, unparse(s)[..-1]);
-        assertionLambdaGroup += (Expression) `() -\> <LambdaBody assertion>`;
+        assertionGroup += s;
       } else {
         if(isSomething(previousStmt) && isStatementAnAssertion(unwrap(previousStmt))) {
-          if(size(assertionLambdaGroup) > 1) {
-            refactoredStatements += buildAssertAll(assertionLambdaGroup);
-          } else {
-            refactoredStatements += head(assertionLambdaGroup);
+          if(size(assertionGroup) > 1) {
+            refactoredStatements += buildAssertAll(assertionGroup);
+          } else if (size(assertionGroup) == 1) {
+            refactoredStatements += head(assertionGroup);
           }
-          assertionLambdaGroup = [];
+          assertionGroup = [];
         }
         refactoredStatements += s;
       }
@@ -41,10 +40,10 @@ public MethodDeclaration declareTestWithAssertAll(MethodDeclaration method) {
     }
   }
 
-  if(size(assertionLambdaGroup) > 1) {
-    refactoredStatements += buildAssertAll(assertionLambdaGroup);
-  } else {
-    refactoredStatements += head(assertionLambdaGroup);
+  if(size(assertionGroup) > 1) {
+    refactoredStatements += buildAssertAll(assertionGroup);
+  } else if (size(assertionGroup) == 1) {
+    refactoredStatements += head(assertionGroup);
   }
 
   str methodBody = ("{\n" | it + unparse(s) + "\n" | BlockStatement s <- refactoredStatements) + "}";
@@ -52,12 +51,13 @@ public MethodDeclaration declareTestWithAssertAll(MethodDeclaration method) {
   return replaceMethodBody(method, parse(#MethodBody, methodBody));
 }
 
-private BlockStatement buildAssertAll(list[Expression] assertionsAsLambdas) {
-  Expression firstAssertionLambda = head(assertionsAsLambdas);
-  str assertAllInvocationArguments = unparse(firstAssertionLambda);
+private BlockStatement buildAssertAll(list[BlockStatement] assertionGroup) {
+  LambdaBody firstAssertion = parse(#LambdaBody, unparse(head(assertionGroup))[..-1]);
+  str assertAllInvocationArguments = unparse((Expression) `() -\> <LambdaBody firstAssertion>`);
 
-  for (Expression argument <- tail(assertionsAsLambdas)) {
-    assertAllInvocationArguments += ",\n<unparse(argument)>";
+  for (BlockStatement assertionStmt <- tail(assertionGroup)) {
+    assertion = parse(#LambdaBody, unparse(assertionStmt)[..-1]);
+    assertAllInvocationArguments += ",\n<unparse((Expression) `() -\> <LambdaBody assertion>`)>";
   }
 
   ArgumentList lambdas = parse(#ArgumentList, assertAllInvocationArguments);
@@ -81,5 +81,5 @@ public bool hasSequentialAssertions(MethodDeclaration method) {
       }
   }
 
-  return assertionCount > 0;
+  return assertionCount > 1;
 }
