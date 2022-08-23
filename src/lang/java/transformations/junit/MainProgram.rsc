@@ -4,74 +4,117 @@ import IO;
 import List; 
 import ParseTree; 
 import String; 
+import Map;
+import Set;
 
 import util::IOUtil;
 
 import lang::java::\syntax::Java18;
+import lang::java::transformations::junit::AssertAll;
+import lang::java::transformations::junit::ConditionalAssertion;
 import lang::java::transformations::junit::ExpectedException;
 import lang::java::transformations::junit::ExpectedTimeout;
+import lang::java::transformations::junit::ParameterizedTest;
+import lang::java::transformations::junit::RepeatedTest;
 import lang::java::transformations::junit::SimpleAnnotations;
- 
+import lang::java::transformations::junit::TempDir;
 
-public void main(str path = "", str maxFilesOpt = "", str transformations = "all") {
+data Transformation = transformation(str name, CompilationUnit (CompilationUnit) function);
+
+public void main(str path = "", str maxFilesOpt = "", str transformationsToApply = "all") {
     loc base = |file:///| + path; 
-    
+
     if( (path == "") || (! exists(base)) || (! isDirectory(base)) ) {
        println("Invalid path <path>"); 
        return; 
     }
-    
+
     int maxFiles = 0;
-    
+
     if(maxFilesOpt != "") {
 		maxFiles = toInt(maxFilesOpt);     
     } 
-    
+
 	list[loc] allFiles = findAllFiles(base, "java"); 
-	
+
 	int errors = 0; 
-	
-	int ee = 0; 
-	int to = 0; 
-	int sa = 0;
-	
+
+  list[Transformation] transformations = [
+    transformation("ExpectedException", expectedExceptionTransform),
+    transformation("ExpectedTimeout", expectedTimeoutTransform),
+    transformation("SimpleAnnotations", simpleAnnotationTransform),
+    transformation("AssertAll", executeAssertAllTransformation),
+    transformation("ConditionalAssertion", executeConditionalAssertionTransformation),
+    transformation("ParameterizedTest", executeParameterizedTestTransformation),
+    transformation("RepeatedTest", executeRepeatedTestTransformation),
+    transformation("TempDir", executeTempDirTransformation)
+  ];
+
+  map[str, int] transformationCount = initTransformationsCount(transformations);
+  int totalTransformationCount = 0;
+
+  CompilationUnit transformedUnit;
 	for(loc f <- allFiles) {
-	  try {  
-	      str content = readFile(f);  
-		  CompilationUnit unit = parse(#CompilationUnit, content);
-		  
-		  if(verifyExpectedException(unit)) {
-		  	unit = executeExpectedExceptionTransformation(unit); 
-		  	ee = ee + 1; 
-		  }
-		  
-		  if(verifyTimeOut(unit)) {
-		  	unit = executeExpectedTimeoutTransformation(unit);
-		  	to = to + 1; 
-		  } 
-		  
-		  if(verifySimpleAnnotations(unit)) {
-		    unit = executeSimpleAnnotationsTransformation(unit);
-		  	sa = sa + 1; 
-		  }
-		  
-		  writeFile(f, unit);  
-		  
-		  if( (maxFiles) > 0 && (to + ee >= maxFiles) ) {
-		     break; 
-		  } 
-		  
-	  }
-	  catch: {
-			errors = errors + 1; 
-	  }		 
+    str content = readFile(f);  
+    println(f);
+    <transformedUnit, totalTransformationCount, transformationCount> = applyTransformations(
+        content, 
+        totalTransformationCount, 
+        transformationCount,
+        transformations
+      );
+    writeFile(f, transformedUnit);  
+
+    if( (maxFiles) > 0 && (totalTransformationCount >= maxFiles) ) {
+       break; 
+    } 
 	}
 
-	println("ExpectedException rule: <ee> transformation(s)"); 
-	println("ExpectedTimeout rule: <to> transformation(s)"); 
-	println("SimpleAnnotations rule: <sa> transformation(s)"); 
-	
-	
+	for(str transformationName <- transformationCount) {
+    println("<transformationName> rule: <transformationCount[transformationName]> transformation(s)");
+  }
+
+	println("Total transformations applied: <totalTransformationCount>");	
 	println("Files with error: <errors>");	
 	println("Number of files: <size(allFiles)>");  
+}
+
+public map[str, int] initTransformationsCount(list[Transformation] transformations) {
+  return (( ) | it + (t.name : 0) | Transformation t <- transformations);
+}
+
+public tuple[CompilationUnit, int, map[str, int]] applyTransformations(
+    str code,
+    int totalTransformationCount,
+    map[str, int] transformationCount,
+    list[Transformation] transformations
+  ) {
+  CompilationUnit unit = parse(#CompilationUnit, code);
+
+  for(Transformation transformation <- transformations) {
+    CompilationUnit transformedUnit = transformation.function(unit);
+    if(unit != transformedUnit) {
+      println("Transformed! <transformation.name>");
+      transformationCount[transformation.name] += 1;
+      totalTransformationCount += 1;
+    }
+    unit = transformedUnit;
+  }
+
+  return <unit, totalTransformationCount, transformationCount>;
+}
+
+private CompilationUnit expectedExceptionTransform(CompilationUnit c) {
+  if(verifyExpectedException(c)) c = executeExpectedExceptionTransformation(c); 
+  return c;
+}
+
+private CompilationUnit expectedTimeoutTransform(CompilationUnit c) {
+  if(verifyTimeOut(c)) c = executeExpectedTimeoutTransformation(c); 
+  return c;
+}
+
+private CompilationUnit simpleAnnotationTransform(CompilationUnit c) {
+  if(verifySimpleAnnotations(c)) c = executeSimpleAnnotationsTransformation(c); 
+  return c;
 }
