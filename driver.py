@@ -30,16 +30,16 @@ def main(argv):
     
     logging.info(f"Loading and checking the {input_dir} git repository")
 
-    repo = git.Repo(input_dir)
+    # repo = git.Repo(input_dir)
 
-    if not (branch in [r.name for r in repo.references]):
-        repo.git.branch(branch)
+    # if not (branch in [r.name for r in repo.references]):
+    #     repo.git.branch(branch)
         
-    repo.git.checkout(branch)
+    # repo.git.checkout(branch)
 
     logging.info("Executing the migrations")
 
-    os.system(f"java -jar rascal-shell-stable.jar lang::java::transformations::junit::MainProgram -path {input_dir} -maxFilesOpt {max_files}")
+    os.system(f"java -Xmx4G -Xss1G -jar rascal-shell-stable.jar lang::java::transformations::junit::MainProgram -path {input_dir} -maxFilesOpt {max_files}")
 
     os.chdir(input_dir)
 

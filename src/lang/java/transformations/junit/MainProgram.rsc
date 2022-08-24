@@ -21,7 +21,12 @@ import lang::java::transformations::junit::TempDir;
 
 data Transformation = transformation(str name, CompilationUnit (CompilationUnit) function);
 
-public void main(str path = "", str maxFilesOpt = "", str transformationsToApply = "all") {
+public void testMain() {
+  main(path = "/home/alexander/unb/tcc/junit5dataset/Pull_Requests/0_all_files", maxFilesOpt = "", transformationsToApply = "all", cli = false);
+  return;
+}
+
+public void main(str path = "", str maxFilesOpt = "", str transformationsToApply = "all", bool cli = true) {
     loc base = |file:///| + path; 
 
     if( (path == "") || (! exists(base)) || (! isDirectory(base)) ) {
@@ -42,12 +47,12 @@ public void main(str path = "", str maxFilesOpt = "", str transformationsToApply
   list[Transformation] transformations = [
     transformation("ExpectedException", expectedExceptionTransform),
     transformation("ExpectedTimeout", expectedTimeoutTransform),
-    transformation("SimpleAnnotations", simpleAnnotationTransform),
     transformation("AssertAll", executeAssertAllTransformation),
     transformation("ConditionalAssertion", executeConditionalAssertionTransformation),
     transformation("ParameterizedTest", executeParameterizedTestTransformation),
     transformation("RepeatedTest", executeRepeatedTestTransformation),
-    transformation("TempDir", executeTempDirTransformation)
+    transformation("TempDir", executeTempDirTransformation),
+    transformation("SimpleAnnotations", simpleAnnotationTransform)
   ];
 
   map[str, int] transformationCount = initTransformationsCount(transformations);
@@ -63,7 +68,10 @@ public void main(str path = "", str maxFilesOpt = "", str transformationsToApply
         transformationCount,
         transformations
       );
-    writeFile(f, transformedUnit);  
+    str fileName = replaceLast(f.file, ".java", (cli ? ".cli" : ".test") + ".java");
+    print("Saved: ");
+    println(fileName);
+    writeFile(f.parent + fileName, transformedUnit);  
 
     if( (maxFiles) > 0 && (totalTransformationCount >= maxFiles) ) {
        break; 
