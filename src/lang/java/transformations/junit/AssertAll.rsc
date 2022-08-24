@@ -61,7 +61,7 @@ private BlockStatement buildAssertAll(list[BlockStatement] assertionGroup) {
   }
 
   ArgumentList lambdas = parse(#ArgumentList, assertAllInvocationArguments);
-  return (BlockStatement) `Assert.assertAll(
+  return (BlockStatement) `Assertions.assertAll(
                           ' <ArgumentList lambdas>
                           ');`;
 }

@@ -29,7 +29,7 @@ str expectedCode1() =
 "public class TestSuite {
 '  @Test
 '  public void multipleAssertionsTest() {
-'     Assert.assertAll(
+'     Assertions.assertAll(
 '	  	  () -\> Assert.assertEquals(\"expected\", \"expected\"),
 '	  	  () -\> Assert.assertEquals(\"something\", \"something\"),
 '	  	  () -\> Assert.assertEquals(\"another thing\", \"another thing\"),
@@ -61,12 +61,12 @@ str expectedCode2() =
 "public class TestSuite {
 '  @Test
 '  public void multipleAssertionsTest() {
-'     Assert.assertAll(
+'     Assertions.assertAll(
 '	  	  () -\> Assert.assertEquals(\"expected\", \"expected\"),
 '	  	  () -\> Assert.assertEquals(\"something\", \"something\")
 '     );
 '     someStatement();
-'     Assert.assertAll(
+'     Assertions.assertAll(
 '	  	  () -\> Assert.assertEquals(\"another thing\", \"another thing\"),
 '	  	  () -\> Assert.assertEquals(\"thing number 3\", \"thing number 3\")
 '     );
