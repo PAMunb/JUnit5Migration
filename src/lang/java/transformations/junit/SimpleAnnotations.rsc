@@ -1,5 +1,6 @@
 module lang::java::transformations::junit::SimpleAnnotations
 
+import ParseTree;
 import lang::java::\syntax::Java18; 
 
 public CompilationUnit executeSimpleAnnotationsTransformation(CompilationUnit unit) {
@@ -17,18 +18,33 @@ public CompilationUnit executeSimpleAnnotationsTransformation(CompilationUnit un
 }
 
 private Imports updateImports(ImportDeclaration* imports) {
-   return (Imports)`<ImportDeclaration* imports> 
-                   ' 
-                   '// JUnit5 migration
-                   'import org.junit.jupiter.api.*;`; 
+	bool junitApiImported = false;
+	
+	top-down-break visit(imports) {
+		case (ImportDeclaration) `import org.junit.jupiter.api.*;`: junitApiImported = true;
+	}
+	
+	if(!junitApiImported) {
+		imports = (Imports)`<ImportDeclaration* imports> 
+                   		   ' 
+                   		   '// JUnit5 migration
+                   		   'import org.junit.jupiter.api.*;`;
+	}
+	
+   return parse(#Imports, unparse(imports)); 
 } 
 
 public bool verifySimpleAnnotations(CompilationUnit cu) {
 	top-down-break visit(cu) {
-		case (MethodModifier)`@BeforeClass`: return true;  
-		case (MethodModifier)`@Before`: return true;  
-		case (MethodModifier)`@After`: return true;  
-		case (MethodModifier)`@Ignore`: return true;  
+		case (MethodModifier)`@BeforeClass`: return true;
+		case (MethodModifier)`@Before`: return true;
+		case (MethodModifier)`@After`: return true;
+		case (MethodModifier)`@Ignore`: return true;
+    case (MethodInvocation) `Assertions.<Identifier _>(<ArgumentList _>)` : return true;
+		case (Annotation) `@ParameterizedTest`: return true;
+    case (Annotation) `@RepeatedTest(<IntegerLiteral _>)`: return true;
+    case (Annotation) `@EnableIf(<StringLiteral _>)`: return true;
+    case (FormalParameter) `@TempDir File tempDir`: return true;
 	}
 	return false; 
 }
