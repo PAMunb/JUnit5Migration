@@ -21,12 +21,7 @@ import lang::java::transformations::junit::TempDir;
 
 data Transformation = transformation(str name, CompilationUnit (CompilationUnit) function);
 
-public void testMain() {
-  main(path = "/home/alexander/unb/tcc/junit5dataset/Pull_Requests/0_all_files", maxFilesOpt = "", transformationsToApply = "all", cli = false);
-  return;
-}
-
-public void main(str path = "", str maxFilesOpt = "", str transformationsToApply = "all", bool cli = true) {
+public void main(str path = "", str maxFilesOpt = "", str transformationsToApply = "all") {
     loc base = |file:///| + path; 
 
     if( (path == "") || (! exists(base)) || (! isDirectory(base)) ) {
@@ -58,25 +53,26 @@ public void main(str path = "", str maxFilesOpt = "", str transformationsToApply
   map[str, int] transformationCount = initTransformationsCount(transformations);
   int totalTransformationCount = 0;
 
-  CompilationUnit transformedUnit;
-	for(loc f <- allFiles) {
-    str content = readFile(f);  
-    println(f);
-    <transformedUnit, totalTransformationCount, transformationCount> = applyTransformations(
-        content, 
-        totalTransformationCount, 
-        transformationCount,
-        transformations
-      );
-    str fileName = replaceLast(f.file, ".java", (cli ? ".cli" : ".test") + ".java");
-    print("Saved: ");
-    println(fileName);
-    writeFile(f.parent + fileName, transformedUnit);  
+  try{
+      CompilationUnit transformedUnit;
+      for(loc f <- allFiles) {
+        str content = readFile(f);  
+        println(f);
+        <transformedUnit, totalTransformationCount, transformationCount> = applyTransformations(
+            content, 
+            totalTransformationCount, 
+            transformationCount,
+            transformations
+          );
+      writeFile(f, transformedUnit); 
 
-    if( (maxFiles) > 0 && (totalTransformationCount >= maxFiles) ) {
-       break; 
-    } 
-	}
+        if( (maxFiles) > 0 && (totalTransformationCount >= maxFiles) ) {
+          break; 
+        } 
+      }
+  }catch:{
+    errors = errors + 1;
+  }
 
 	for(str transformationName <- transformationCount) {
     println("<transformationName> rule: <transformationCount[transformationName]> transformation(s)");

@@ -3,8 +3,11 @@
 import sys, os, getopt
 import logging 
 import git
+from datetime import datetime
 
-logging.basicConfig(level = logging.INFO)
+
+currentDateAndTime = datetime.now()
+
 
 usage = 'migrate.py -i <input_dir> '
 branch = 'junit5-migration'
@@ -38,8 +41,9 @@ def main(argv):
     # repo.git.checkout(branch)
 
     logging.info("Executing the migrations")
+    currentTime = currentDateAndTime.strftime("%y%m%d%H%M%S")
 
-    os.system(f"java -Xmx4G -Xss1G -jar rascal-shell-stable.jar lang::java::transformations::junit::MainProgram -path {input_dir} -maxFilesOpt {max_files}")
+    os.system(f"java -Xmx4G -Xss1G -jar rascal-shell-stable.jar lang::java::transformations::junit::MainProgram -path {input_dir} -maxFilesOpt {max_files} > output/log-{currentTime}")
 
     os.chdir(input_dir)
 
