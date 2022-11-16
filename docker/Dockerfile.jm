@@ -1,0 +1,40 @@
+FROM adoptopenjdk/openjdk11:jdk-11.0.8_10-ubuntu
+
+
+LABEL org.opencontainers.image.authors="waltimlmm@gmail.com"
+
+# Update apt packages
+RUN apt update
+RUN apt upgrade -y
+
+WORKDIR /home
+
+# Install python 3.7
+RUN apt-get install -y software-properties-common gcc git && \
+    add-apt-repository -y ppa:deadsnakes/ppa
+
+RUN apt-get update && apt-get install -y python3.7 python3-distutils python3-pip python3-apt unzip wget
+
+RUN pip install GitPython
+
+# Copy tools and files, and unzip in home dir
+ADD JUnit5Migration.zip /home
+RUN cd /home && unzip JUnit5Migration.zip && rm JUnit5Migration.zip
+
+RUN cd /home/JUnit5Migration/ && wget https://update.rascal-mpl.org/console/rascal-shell-stable.jar && cd ..
+
+# Define volumes
+# VOLUME /home/walterlucas/Documents/dataset /home/dataset
+# VOLUME /home/walterlucas/Documents/output /home/JUnit5Migration/output
+
+WORKDIR /home
+
+RUN chmod 777 /home
+
+CMD [ "/bin/bash", "-c", "/bin/bash" ]
+ 
+
+#docker build -t jm5 -f Dockerfile.jm .
+
+#docker run --name junit5 -w /home/JUnit5Migration/ -it -v /home/walterlucas/Documents/dataset:/home/dataset -v /home/walterlucas/Documents/output:/home/JUnit5Migration/output jm5 python3 driver.py -i /home/dataset/jasmine-maven-plugin/ -m 10
+
