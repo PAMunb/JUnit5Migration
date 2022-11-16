@@ -15,7 +15,6 @@ branch = 'junit5-migration'
 
 def main(argv):
     cwd = os.getcwd()
-
     input_dir = ''
     max_files = '0'
 
@@ -47,7 +46,11 @@ def main(argv):
 
     os.chdir(input_dir)
 
-    logging.info("Formating the source code") 
+    logging.info("Formating the source code")
+
+    print(os.getcwd())
+
+    os.system(f"git config --global --add safe.directory '*' ")
 
     os.system(f"git diff -U0 HEAD^ | {cwd}/google-java-format-diff.py -p1 -i --google-java-format-jar {cwd}/google-format.jar")
     
