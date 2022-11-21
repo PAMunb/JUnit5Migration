@@ -18,11 +18,12 @@ import lang::java::transformations::junit::ParameterizedTest;
 import lang::java::transformations::junit::RepeatedTest;
 import lang::java::transformations::junit::SimpleAnnotations;
 import lang::java::transformations::junit::TempDir;
+import lang::java::transformations::junit::MethodImports;
 
 data Transformation = transformation(str name, CompilationUnit (CompilationUnit) function);
 
 public void main(str path = "", str maxFilesOpt = "", str transformationsToApply = "all") {
-    loc base = |file:///| + path; 
+    loc base = |cwd:///| + path; 
 
     if( (path == "") || (! exists(base)) || (! isDirectory(base)) ) {
        println("Invalid path <path>"); 
@@ -35,7 +36,7 @@ public void main(str path = "", str maxFilesOpt = "", str transformationsToApply
 		maxFiles = toInt(maxFilesOpt);     
     } 
 
-	list[loc] allFiles = findAllFiles(base, "java"); 
+	list[loc] allFiles = findAllTestFiles(base, "java", false); 
 
 	int errors = 0; 
 
@@ -47,7 +48,8 @@ public void main(str path = "", str maxFilesOpt = "", str transformationsToApply
     transformation("ParameterizedTest", executeParameterizedTestTransformation),
     transformation("RepeatedTest", executeRepeatedTestTransformation),
     transformation("TempDir", executeTempDirTransformation),
-    transformation("SimpleAnnotations", simpleAnnotationTransform)
+    transformation("SimpleAnnotations", simpleAnnotationTransform),
+    transformation("MethodImports", methodImportsTransform)
   ];
 
   map[str, int] transformationCount = initTransformationsCount(transformations);
@@ -120,5 +122,10 @@ private CompilationUnit expectedTimeoutTransform(CompilationUnit c) {
 
 private CompilationUnit simpleAnnotationTransform(CompilationUnit c) {
   if(verifySimpleAnnotations(c)) c = executeSimpleAnnotationsTransformation(c); 
+  return c;
+}
+
+private CompilationUnit methodImportsTransform(CompilationUnit c) {
+  if(verifyMethodImports(c)) c = executeMethodImportsTransformation(c);
   return c;
 }

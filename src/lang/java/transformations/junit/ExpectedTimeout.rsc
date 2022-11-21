@@ -38,11 +38,23 @@ public CompilationUnit executeExpectedTimeoutTransformation(CompilationUnit unit
 }
 
 private Imports updateImports(ImportDeclaration* imports) {
-   return (Imports)`<ImportDeclaration* imports> 
-                   ' 
-                   '// JUnit5 migration
-                   'import java.time.Duration; 
-                   'import org.junit.jupiter.api.Assertions.assertTimeout;`; 
+	bool durationImported = false;
+
+	top-down-break visit(imports) {
+		case (ImportDeclaration) `import java.time.Duration;`: durationImported = true;
+	}
+
+	imports = (Imports)`<ImportDeclaration* imports> 
+											' 
+											'// JUnit5 migration
+											'import static org.junit.jupiter.api.Assertions.assertTimeout;`; 
+
+	if (!durationImported) {
+		imports = (Imports)`<ImportDeclaration* imports>
+												'import java.time.Duration;`;
+	}
+
+	return imports;
 } 
 
 public bool verifyTimeOut(CompilationUnit unit) {
