@@ -18,12 +18,12 @@ import lang::java::transformations::junit::ParameterizedTest;
 import lang::java::transformations::junit::RepeatedTest;
 import lang::java::transformations::junit::SimpleAnnotations;
 import lang::java::transformations::junit::TempDir;
-import lang::java::transformations::junit::MethodImports;
+import lang::java::transformations::junit::Imports;
 
 data Transformation = transformation(str name, CompilationUnit (CompilationUnit) function);
 
 public void main(str path = "", str maxFilesOpt = "", str transformationsToApply = "all") {
-    loc base = |cwd:///| + path; 
+    loc base = |file:///| + path; 
 
     if( (path == "") || (! exists(base)) || (! isDirectory(base)) ) {
        println("Invalid path <path>"); 
@@ -49,7 +49,7 @@ public void main(str path = "", str maxFilesOpt = "", str transformationsToApply
     transformation("RepeatedTest", executeRepeatedTestTransformation),
     transformation("TempDir", executeTempDirTransformation),
     transformation("SimpleAnnotations", simpleAnnotationTransform),
-    transformation("MethodImports", methodImportsTransform)
+    transformation("Imports", importsTransform)
   ];
 
   map[str, int] transformationCount = initTransformationsCount(transformations);
@@ -125,7 +125,7 @@ private CompilationUnit simpleAnnotationTransform(CompilationUnit c) {
   return c;
 }
 
-private CompilationUnit methodImportsTransform(CompilationUnit c) {
-  if(verifyMethodImports(c)) c = executeMethodImportsTransformation(c);
+private CompilationUnit importsTransform(CompilationUnit c) {
+  if(verifyImports(c)) c = executeImportsTransformation(c);
   return c;
 }
