@@ -35,7 +35,7 @@ private Imports updateImports(ImportDeclaration* imports) {
    return (Imports)`<ImportDeclaration* imports> 
                    ' 
                    '// JUnit5 migration 
-                   'import org.junit.jupiter.api.Assertions.assertThrows;`; 
+                   'import static org.junit.jupiter.api.Assertions.assertThrows;`; 
 } 
 
 public bool verifyExpectedException(CompilationUnit unit) {
