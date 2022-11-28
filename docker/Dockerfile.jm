@@ -15,14 +15,9 @@ RUN apt-get install -y software-properties-common gcc git && \
 
 RUN apt-get update && apt-get install -y python3.7 python3-distutils python3-pip python3-apt unzip wget
 
-RUN pip install GitPython
+RUN cd /home && git clone https://github.com/PAMunb/JUnit5Migration.git
 
-# Copy tools and files, and unzip in home dir
-ADD JUnit5Migration.zip /home
-RUN cd /home && unzip JUnit5Migration.zip && rm JUnit5Migration.zip
-
-RUN cd /home/JUnit5Migration/ && wget https://update.rascal-mpl.org/console/rascal-shell-stable.jar && cd ..
-
+RUN cd /home/JUnit5Migration/ && wget https://update.rascal-mpl.org/console/rascal-shell-stable.jar && pip install -r requirements.txt && cd ..
 # Define volumes
 # VOLUME /home/walterlucas/Documents/dataset /home/dataset
 # VOLUME /home/walterlucas/Documents/output /home/JUnit5Migration/output
