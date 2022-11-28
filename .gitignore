@@ -1,1 +1,3 @@
-rascal-shell-stable.jar
+/bin/
+/rascal-shell-stable.jar
+__pycache__/*

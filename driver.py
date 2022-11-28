@@ -4,7 +4,7 @@ import sys, os, getopt
 import logging 
 import git
 from datetime import datetime
-
+import pomMigration
 
 currentDateAndTime = datetime.now()
 
@@ -48,11 +48,13 @@ def main(argv):
 
     logging.info("Formating the source code")
 
-    print(os.getcwd())
-
     os.system(f"git config --global --add safe.directory '*' ")
 
     os.system(f"git diff -U0 HEAD^ | {cwd}/google-java-format-diff.py -p1 -i --google-java-format-jar {cwd}/google-format.jar")
+
+    
+    pom_path = "-i "+input_dir+"pom.xml"
+    pomMigration.main(argv=[pom_path])
     
     logging.info("done")
 
