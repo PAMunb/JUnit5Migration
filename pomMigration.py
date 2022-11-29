@@ -1,6 +1,8 @@
 import sys, os, getopt
 from bs4 import BeautifulSoup
 import xmlformatter
+import html
+
 
 def main(argv):
     cwd = os.getcwd()
@@ -17,6 +19,8 @@ def main(argv):
 
     isFile = os.path.isfile(pomXml)
 
+    # print(isFile)
+
     if isFile == True:
 
         # Reading the data inside the xml file to a variable under the name  data
@@ -29,23 +33,23 @@ def main(argv):
         # Finding all instances of tag   
         b_unique = bs_data.find_all('dependency')
 
+        # print(b_unique)
+
         for event in b_unique:
-            if 'junit' in event.select_one('groupId').text or 'junit' in event.select_one('artifactId').text:
-                result = event.find('groupId')
-                result.string.replace_with('org.junit.jupiter')
-                result = event.find('artifactId')
-                result.string.replace_with('junit-jupiter-engine')
-                result = event.find('version')
-                result.string.replace_with('5.4.0')
-                # print(event)
+            if event.select_one('version').text.startswith('4') and ('junit' in event.select_one('groupId').text or 'junit' in event.select_one('artifactId').text):
+
+                dependencies = event.parent
+                dependencies.append(html.unescape("\n<dependency>\n<groupId>org.junit.jupiter</groupId>\n<artifactId>junit-jupiter-api</artifactId>\n <version>5.9.1</version>\n<scope>test</scope>\n</dependency>"))
+                dependencies.append(html.unescape('\n<dependency>\n<groupId>org.junit.jupiter</groupId>\n<artifactId>junit-jupiter-engine</artifactId>\n <version>5.9.1</version>\n<scope>test</scope>\n</dependency>'))
+                dependencies.append(html.unescape('\n<dependency>\n<groupId>org.junit.vintage</groupId>\n<artifactId>junit-vintage-engine</artifactId>\n <version>5.9.1</version>\n<scope>test</scope>\n</dependency>'))
+                event.decompose()
                 break
 
 
         with open(pomXml, 'w', encoding='utf-8') as f:
-            f.write(str(bs_data))
+            f.write(str(bs_data).replace("&lt;","<").replace("&gt;",">"))
         
-        formatter = xmlformatter.Formatter(indent="1", indent_char="\t", encoding_output="UTF-8", preserve=["literal"])
-        formatter.format_file(pomXml)
+        os.system(f"xmlformat --overwrite {pomXml}")
             
     else:
         sys.exit(0)
