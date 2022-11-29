@@ -1,3 +1,4 @@
 /bin/
 /rascal-shell-stable.jar
 __pycache__/*
+/results.csv
