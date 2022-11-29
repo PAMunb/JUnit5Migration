@@ -16,5 +16,5 @@ developers to migrate JUnit 4 test cases to JUnit 5.
 ```shell
 $ docker build -t jm5 -f Dockerfile.jm .
 
-$ docker run --name junit5 -w /home/JUnit5Migration/ -it -v [LOCATION_OF_DATASET_IN_YOUR_HOST]:/home/dataset -v [LOCATION_OF_OUTPUT_DIRECTORY_IN_YOUR_HOST]:/home/JUnit5Migration/output jm5 python3 driver.py -i /home/dataset/[NAME_OF_PROJECT_DIRECTORY]/ -m 10
+$ docker run --name junit5 -w /home/JUnit5Migration/ -it --rm -v [LOCATION_OF_DATASET_IN_YOUR_HOST]:/home/dataset -v [LOCATION_OF_OUTPUT_DIRECTORY_IN_YOUR_HOST]:/home/JUnit5Migration/output jm5 python3 driver.py -i /home/dataset/[NAME_OF_PROJECT_DIRECTORY]/ -m 10
 ```

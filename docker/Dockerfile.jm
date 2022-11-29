@@ -13,7 +13,7 @@ WORKDIR /home
 RUN apt-get install -y software-properties-common gcc git && \
     add-apt-repository -y ppa:deadsnakes/ppa
 
-RUN apt-get update && apt-get install -y python3.7 python3-distutils python3-pip python3-apt unzip wget
+RUN apt-get update && apt-get install -y python3.7 python3-distutils python3-pip python3-apt unzip wget libxml2-dev python-dev python3-lxml
 
 RUN cd /home && git clone https://github.com/PAMunb/JUnit5Migration.git
 
@@ -26,10 +26,10 @@ WORKDIR /home
 
 RUN chmod 777 /home
 
-CMD [ "/bin/bash", "-c", "/bin/bash" ]
+CMD [ "echo", "Migration finished!" ]
  
 
 #docker build -t jm5 -f Dockerfile.jm .
 
-#docker run --name junit5 -w /home/JUnit5Migration/ -it -v /home/walterlucas/Documents/dataset:/home/dataset -v /home/walterlucas/Documents/output:/home/JUnit5Migration/output jm5 python3 driver.py -i /home/dataset/jasmine-maven-plugin/ -m 10
+#docker run --name junit5 -w /home/JUnit5Migration/ -it --rm -v /home/walterlucas/Documents/dataset:/home/dataset -v /home/walterlucas/Documents/output:/home/JUnit5Migration/output jm5 python3 driver.py -i /home/dataset/jasmine-maven-plugin/ -m 10
 

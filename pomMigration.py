@@ -1,5 +1,6 @@
 import sys, os, getopt
 from bs4 import BeautifulSoup
+import xmlformatter
 
 def main(argv):
     cwd = os.getcwd()
@@ -41,7 +42,10 @@ def main(argv):
 
 
         with open(pomXml, 'w', encoding='utf-8') as f:
-            f.write(str(bs_data.prettify()))
+            f.write(str(bs_data))
+        
+        formatter = xmlformatter.Formatter(indent="1", indent_char="\t", encoding_output="UTF-8", preserve=["literal"])
+        formatter.format_file(pomXml)
             
     else:
         sys.exit(0)
